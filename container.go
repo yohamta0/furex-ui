@@ -260,12 +260,17 @@ func (ct *containerEmbed) handleMouseEvents() {
 	x, y := ebiten.CursorPosition()
 	ct.handleMouse(x, y)
 	ct.handleMouseEnterLeave(x, y)
-	if inpututil.IsMouseButtonJustPressed((ebiten.MouseButtonLeft)) {
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		ct.handleMouseButtonLeftPressed(x, y)
 	}
-	if inpututil.IsMouseButtonJustReleased((ebiten.MouseButtonLeft)) {
+	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 		ct.handleMouseButtonLeftReleased(x, y)
 	}
+}
+
+// Frame returns calculated screen bounds of this container
+func (ct *containerEmbed) Frame() image.Rectangle {
+	return ct.frame
 }
 
 func (ct *containerEmbed) setFrame(frame image.Rectangle) {
