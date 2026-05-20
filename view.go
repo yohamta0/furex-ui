@@ -288,6 +288,19 @@ func (v *View) SetHeight(height int) {
 	v.Layout()
 }
 
+// SetMargin sets the margins using shorthand syntax
+func (v *View) SetMargin(margin ...int) {
+	top, right, bottom, left, ok := v.expandBoxValues(margin...)
+	if !ok {
+		return
+	}
+
+	v.SetMarginTop(top)
+	v.SetMarginBottom(bottom)
+	v.SetMarginLeft(left)
+	v.SetMarginRight(right)
+}
+
 // SetMarginLeft sets the left margin of the view.
 func (v *View) SetMarginLeft(marginLeft int) {
 	v.MarginLeft = marginLeft
@@ -410,6 +423,36 @@ func (v *View) handleDrawRoot(screen *ebiten.Image, b image.Rectangle) {
 	if h, ok := v.Handler.(Drawer); ok {
 		h.Draw(screen, b, v)
 	}
+}
+
+func (v *View) expandBoxValues(values ...int) (top, right, bottom, left int, ok bool) {
+	switch len(values) {
+	case 1:
+		top = values[0]
+		bottom = values[0]
+		left = values[0]
+		right = values[0]
+		ok = true
+	case 2:
+		top = values[0]
+		bottom = values[0]
+		left = values[1]
+		right = values[1]
+		ok = true
+	case 3:
+		top = values[0]
+		left = values[1]
+		right = values[1]
+		bottom = values[2]
+		ok = true
+	case 4:
+		top = values[0]
+		right = values[1]
+		bottom = values[2]
+		left = values[3]
+		ok = true
+	}
+	return top, right, bottom, left, ok
 }
 
 // This is for debugging and testing.
