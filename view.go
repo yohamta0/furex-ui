@@ -295,10 +295,11 @@ func (v *View) SetMargin(margin ...int) {
 		return
 	}
 
-	v.SetMarginTop(top)
-	v.SetMarginBottom(bottom)
-	v.SetMarginLeft(left)
-	v.SetMarginRight(right)
+	v.MarginTop = top
+	v.MarginBottom = bottom
+	v.MarginLeft = left
+	v.MarginRight = right
+	v.Layout()
 }
 
 // SetMarginLeft sets the left margin of the view.

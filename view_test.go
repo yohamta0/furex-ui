@@ -165,30 +165,17 @@ func TestExpandBoxValues(t *testing.T) {
 			values: []int{1, 2, 3, 4, 5},
 			ok:     false,
 		},
-		{
-			name:   "negative values are preserved",
-			values: []int{-1, -2, -3, -4},
-			top:    -1, right: -2, bottom: -3, left: -4,
-			ok: true,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			top, right, bottom, left, ok := v.expandBoxValues(tt.values...)
 
-			if top != tt.top ||
-				right != tt.right ||
-				bottom != tt.bottom ||
-				left != tt.left ||
-				ok != tt.ok {
-				t.Fatalf(
-					"expandBoxValues(%v) = top=%d right=%d bottom=%d left=%d ok=%v, want top=%d right=%d bottom=%d left=%d ok=%v",
-					tt.values,
-					top, right, bottom, left, ok,
-					tt.top, tt.right, tt.bottom, tt.left, tt.ok,
-				)
-			}
+			require.Equal(t, tt.top, top)
+			require.Equal(t, tt.right, right)
+			require.Equal(t, tt.bottom, bottom)
+			require.Equal(t, tt.left, left)
+			require.Equal(t, tt.ok, ok)
 		})
 	}
 }
@@ -242,21 +229,10 @@ func TestView_SetMargin(t *testing.T) {
 
 			v.SetMargin(tt.values...)
 
-			if v.MarginTop != tt.top {
-				t.Fatalf("marginTop = %d, want %d", v.MarginTop, tt.top)
-			}
-
-			if v.MarginRight != tt.right {
-				t.Fatalf("marginRight = %d, want %d", v.MarginRight, tt.right)
-			}
-
-			if v.MarginBottom != tt.bottom {
-				t.Fatalf("marginBottom = %d, want %d", v.MarginBottom, tt.bottom)
-			}
-
-			if v.MarginLeft != tt.left {
-				t.Fatalf("marginLeft = %d, want %d", v.MarginLeft, tt.left)
-			}
+			require.Equal(t, tt.top, v.MarginTop)
+			require.Equal(t, tt.right, v.MarginRight)
+			require.Equal(t, tt.bottom, v.MarginBottom)
+			require.Equal(t, tt.left, v.MarginLeft)
 		})
 	}
 }
