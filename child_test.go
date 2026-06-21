@@ -257,7 +257,7 @@ func testMouseMove(t *testing.T, flex *View, h *mockHandler, frame image.Rectang
 		t.Run(tt.Scenario, func(t *testing.T) {
 			h.Init()
 
-			flex.handleMouse(tt.Point.X, tt.Point.Y)
+			flex.handlePointer(tt.Point.X, tt.Point.Y)
 
 			assert.Equal(t, tt.Want, result{h.IsMouseMoved, h.MousePoint})
 		})
@@ -349,7 +349,7 @@ type mockFlags struct {
 var _ DrawHandler = (*mockHandler)(nil)
 var _ UpdateHandler = (*mockHandler)(nil)
 var _ ButtonHandler = (*mockHandler)(nil)
-var _ MouseHandler = (*mockHandler)(nil)
+var _ PointerHandler = (*mockHandler)(nil)
 var _ SwipeHandler = (*mockHandler)(nil)
 
 func (h *mockHandler) Init() {
@@ -375,7 +375,7 @@ func (h *mockHandler) HandleRelease(x, y int, isCancel bool) {
 	h.IsCancel = isCancel
 }
 
-func (h *mockHandler) HandleMouse(x, y int) bool {
+func (h *mockHandler) HandlePointer(x, y int) bool {
 	h.IsMouseMoved = true
 	h.MousePoint = image.Pt(x, y)
 	return true

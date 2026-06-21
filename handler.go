@@ -66,30 +66,30 @@ type TouchHandler interface {
 	HandleJustReleasedTouchID(touch ebiten.TouchID, x, y int)
 }
 
-// MouseHandler represents a component that handle mouse move.
-type MouseHandler interface {
-	// HandleMouse handles the mouch move and returns true if it handle the mouse move.
+// PointerHandler represents a component that handle pointer move.
+type PointerHandler interface {
+	// HandlePointer handles the pointer move and returns true if it handled the pointer move.
 	// The parameter (x, y) is the location relative to the window (0,0).
-	HandleMouse(x, y int) bool
+	HandlePointer(x, y int) bool
 }
 
-// MouseLeftButtonHandler represents a component that handle mouse button left click.
-type MouseLeftButtonHandler interface {
-	// HandleJustPressedMouseButtonLeft handle left mouse button click just pressed.
+// PointerPrimaryButtonHandler represents a component that handle mouse button left click.
+type PointerPrimaryButtonHandler interface {
+	// HandleJustPressedPointerButtonPrimary handle primary pointer button just pressed.
 	// The parameter (x, y) is the location relative to the window (0,0).
-	// It returns true if it handles the mouse move.
-	HandleJustPressedMouseButtonLeft(x, y int) bool
-	// HandleJustReleasedTouchID handles the touchID just released.
+	// It returns true if it handles the pointer move.
+	HandleJustPressedPointerButtonPrimary(x, y int) bool
+	// HandleJustReleasedPointerButtonPrimary handles the pointer button just released.
 	// The parameter (x, y) is the location relative to the window (0,0).
-	HandleJustReleasedMouseButtonLeft(x, y int)
+	HandleJustReleasedPointerButtonPrimary(x, y int)
 }
 
-// MouseEnterHandler represets a component that handle mouse enter.
-type MouseEnterLeaveHandler interface {
-	// HandleMouseEnter handles the mouse enter.
-	HandleMouseEnter(x, y int) bool
-	// HandleMouseLeave handles the mouse leave.
-	HandleMouseLeave()
+// PointerEnterLeaveHandler represents a component that handle pointer enter/leave.
+type PointerEnterLeaveHandler interface {
+	// HandlePointerEnter handles the pointer enter.
+	HandlePointerEnter(x, y int) bool
+	// HandlePointerLeave handles the pointer leave.
+	HandlePointerLeave()
 }
 
 // SwipeHandler represents different swipe directions.

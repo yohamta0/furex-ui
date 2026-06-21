@@ -22,10 +22,10 @@ type Panel struct {
 }
 
 var (
-	_ furex.ButtonHandler          = (*Panel)(nil)
-	_ furex.NotButton              = (*Panel)(nil)
-	_ furex.Drawer                 = (*Panel)(nil)
-	_ furex.MouseEnterLeaveHandler = (*Panel)(nil)
+	_ furex.ButtonHandler            = (*Panel)(nil)
+	_ furex.NotButton                = (*Panel)(nil)
+	_ furex.Drawer                   = (*Panel)(nil)
+	_ furex.PointerEnterLeaveHandler = (*Panel)(nil)
 )
 
 func (p *Panel) Draw(screen *ebiten.Image, frame image.Rectangle, view *furex.View) {
@@ -119,12 +119,12 @@ func (p *Panel) IsButton() bool {
 	return p.OnClick != nil
 }
 
-func (p *Panel) HandleMouseEnter(x, y int) bool {
+func (p *Panel) HandlePointerEnter(x, y int) bool {
 	p.mouseover = true
 	return true
 }
 
-func (p *Panel) HandleMouseLeave() {
+func (p *Panel) HandlePointerLeave() {
 	p.mouseover = false
 }
 

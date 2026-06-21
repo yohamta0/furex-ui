@@ -15,9 +15,9 @@ type Mouse struct {
 }
 
 var (
-	_ furex.DrawHandler            = (*Mouse)(nil)
-	_ furex.MouseHandler           = (*Mouse)(nil)
-	_ furex.MouseEnterLeaveHandler = (*Mouse)(nil)
+	_ furex.DrawHandler              = (*Mouse)(nil)
+	_ furex.PointerHandler           = (*Mouse)(nil)
+	_ furex.PointerEnterLeaveHandler = (*Mouse)(nil)
 )
 
 func (m *Mouse) HandleDraw(screen *ebiten.Image, frame image.Rectangle) {
@@ -28,19 +28,19 @@ func (m *Mouse) HandleDraw(screen *ebiten.Image, frame image.Rectangle) {
 	}
 }
 
-func (m *Mouse) HandleMouse(x, y int) bool {
+func (m *Mouse) HandlePointer(x, y int) bool {
 	m.x = x
 	m.y = y
 	return true
 }
 
-func (m *Mouse) HandleMouseEnter(x int, y int) bool {
+func (m *Mouse) HandlePointerEnter(x int, y int) bool {
 	m.isMouseActive = true
 	m.x = x
 	m.y = y
 	return true
 }
 
-func (m *Mouse) HandleMouseLeave() {
+func (m *Mouse) HandlePointerLeave() {
 	m.isMouseActive = false
 }

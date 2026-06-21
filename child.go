@@ -14,7 +14,7 @@ type child struct {
 	bounds                   image.Rectangle
 	isButtonPressed          bool
 	isMouseLeftButtonHandler bool
-	isMouseEntered           bool
+	isPointerEntered         bool
 	handledTouchID           ebiten.TouchID
 	swipe
 }

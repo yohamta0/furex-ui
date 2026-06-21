@@ -23,7 +23,7 @@ type containerEmbed struct {
 
 func (ct *containerEmbed) processEvent() {
 	ct.handleTouchEvents()
-	ct.handleMouseEvents()
+	ct.handlePointerEvents()
 }
 
 // Draw draws it's children
@@ -100,29 +100,29 @@ func (ct *containerEmbed) HandleJustReleasedTouchID(touchID ebiten.TouchID, x, y
 	}
 }
 
-func (ct *containerEmbed) handleMouse(x, y int) bool {
+func (ct *containerEmbed) handlePointer(x, y int) bool {
 	for c := len(ct.children) - 1; c >= 0; c-- {
 		child := ct.children[c]
 		childFrame := ct.childFrame(child)
 		if child.item.Display == DisplayNone {
 			continue
 		}
-		mouseHandler, ok := child.item.Handler.(MouseHandler)
-		if ok && mouseHandler != nil {
+		pointerHandler, ok := child.item.Handler.(PointerHandler)
+		if ok && pointerHandler != nil {
 			if isInside(childFrame, x, y) {
-				if mouseHandler.HandleMouse(x, y) {
+				if pointerHandler.HandlePointer(x, y) {
 					return true
 				}
 			}
 		}
-		if child.item.handleMouse(x, y) {
+		if child.item.handlePointer(x, y) {
 			return true
 		}
 	}
 	return false
 }
 
-func (ct *containerEmbed) handleMouseEnterLeave(x, y int) bool {
+func (ct *containerEmbed) handlePointerEnterLeave(x, y int) bool {
 	result := false
 	for c := len(ct.children) - 1; c >= 0; c-- {
 		child := ct.children[c]
@@ -130,22 +130,22 @@ func (ct *containerEmbed) handleMouseEnterLeave(x, y int) bool {
 		if child.item.Display == DisplayNone {
 			continue
 		}
-		mouseHandler, ok := child.item.Handler.(MouseEnterLeaveHandler)
+		pointerHandler, ok := child.item.Handler.(PointerEnterLeaveHandler)
 		if ok {
-			if !result && !child.isMouseEntered && isInside(childFrame, x, y) {
-				if mouseHandler.HandleMouseEnter(x, y) {
+			if !result && !child.isPointerEntered && isInside(childFrame, x, y) {
+				if pointerHandler.HandlePointerEnter(x, y) {
 					result = true
-					child.isMouseEntered = true
+					child.isPointerEntered = true
 				}
 			}
 
-			if child.isMouseEntered && !isInside(childFrame, x, y) {
-				child.isMouseEntered = false
-				mouseHandler.HandleMouseLeave()
+			if child.isPointerEntered && !isInside(childFrame, x, y) {
+				child.isPointerEntered = false
+				pointerHandler.HandlePointerLeave()
 			}
 		}
 
-		if child.item.handleMouseEnterLeave(x, y) {
+		if child.item.handlePointerEnterLeave(x, y) {
 			result = true
 		}
 	}
@@ -161,10 +161,10 @@ func (ct *containerEmbed) handleMouseButtonLeftPressed(x, y int) bool {
 		if child.item.Display == DisplayNone {
 			continue
 		}
-		mouseLeftClickHandler, ok := child.item.Handler.(MouseLeftButtonHandler)
+		mouseLeftClickHandler, ok := child.item.Handler.(PointerPrimaryButtonHandler)
 		if ok {
 			if !result && isInside(childFrame, x, y) {
-				if mouseLeftClickHandler.HandleJustPressedMouseButtonLeft(x, y) {
+				if mouseLeftClickHandler.HandleJustPressedPointerButtonPrimary(x, y) {
 					result = true
 					child.isMouseLeftButtonHandler = true
 				}
@@ -201,11 +201,11 @@ func (ct *containerEmbed) handleMouseButtonLeftPressed(x, y int) bool {
 func (ct *containerEmbed) handleMouseButtonLeftReleased(x, y int) {
 	for c := len(ct.children) - 1; c >= 0; c-- {
 		child := ct.children[c]
-		mouseLeftClickHandler, ok := child.item.Handler.(MouseLeftButtonHandler)
+		mouseLeftClickHandler, ok := child.item.Handler.(PointerPrimaryButtonHandler)
 		if ok {
 			if child.isMouseLeftButtonHandler {
 				child.isMouseLeftButtonHandler = false
-				mouseLeftClickHandler.HandleJustReleasedMouseButtonLeft(x, y)
+				mouseLeftClickHandler.HandleJustReleasedPointerButtonPrimary(x, y)
 			}
 		}
 
@@ -256,14 +256,14 @@ func (ct *containerEmbed) handleTouchEvents() {
 	}
 }
 
-func (ct *containerEmbed) handleMouseEvents() {
-	x, y := ebiten.CursorPosition()
-	ct.handleMouse(x, y)
-	ct.handleMouseEnterLeave(x, y)
-	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+func (ct *containerEmbed) handlePointerEvents() {
+	x, y := CurrentPointerSource.ReadPosition()
+	ct.handlePointer(x, y)
+	ct.handlePointerEnterLeave(x, y)
+	if CurrentPointerSource.IsJustPressed() {
 		ct.handleMouseButtonLeftPressed(x, y)
 	}
-	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+	if CurrentPointerSource.IsJustReleased() {
 		ct.handleMouseButtonLeftReleased(x, y)
 	}
 }

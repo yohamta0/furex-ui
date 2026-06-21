@@ -2,10 +2,12 @@ package main
 
 import (
 	"image/color"
+	"log"
 	"sync"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/tinne26/etxt"
 	"github.com/yohamta/furex/examples/game/sprites"
 	"github.com/yohamta/furex/examples/game/text"
@@ -19,6 +21,9 @@ type Game struct {
 	initOnce sync.Once
 	screen   screen
 	gameUI   *furex.View
+
+	gamepadIDsBuf []ebiten.GamepadID
+	gamepadFound  bool
 }
 
 type screen struct {
@@ -29,6 +34,27 @@ type screen struct {
 func (g *Game) Update() error {
 	g.initOnce.Do(func() { g.setupUI() })
 	g.gameUI.Update()
+
+	furex.UpdatePointer(time.Second / 60)
+
+	if g.gamepadFound {
+		return nil
+	}
+
+	g.gamepadIDsBuf = inpututil.AppendJustConnectedGamepadIDs(g.gamepadIDsBuf[:0])
+	for _, id := range g.gamepadIDsBuf {
+		if ebiten.IsStandardGamepadButtonAvailable(id, ebiten.StandardGamepadButtonLeftStick) {
+			log.Printf("gamepad connected: id: %d, SDL ID: %s", id, ebiten.GamepadSDLID(id))
+			g.gamepadFound = true
+
+			furex.CurrentPointerSource = furex.NewGamePadPointerSource(
+				id, ebiten.GamepadButton0, 500,
+			).WithBounds(g.screen.Width, g.screen.Height)
+
+			//break
+		}
+	}
+
 	return nil
 }
 
@@ -183,7 +209,8 @@ func (g *Game) setupUI() {
 }
 
 func main() {
-	ebiten.SetWindowSize(480, 640)
+	w, h := 480, 640
+	ebiten.SetWindowSize(w, h)
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 
 	game, err := NewGame()
