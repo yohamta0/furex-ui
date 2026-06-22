@@ -21,9 +21,9 @@ type Button struct {
 }
 
 var (
-	_ furex.ButtonHandler          = (*Button)(nil)
-	_ furex.Drawer                 = (*Button)(nil)
-	_ furex.MouseEnterLeaveHandler = (*Button)(nil)
+	_ furex.ButtonHandler            = (*Button)(nil)
+	_ furex.Drawer                   = (*Button)(nil)
+	_ furex.PointerEnterLeaveHandler = (*Button)(nil)
 )
 
 func (b *Button) HandlePress(x, y int, t ebiten.TouchID) {
@@ -65,11 +65,11 @@ func (b *Button) Draw(screen *ebiten.Image, frame image.Rectangle, view *furex.V
 	text.R.Draw(view.Text, int(x), int(y))
 }
 
-func (b *Button) HandleMouseEnter(x, y int) bool {
+func (b *Button) HandlePointerEnter(x, y int) bool {
 	b.mouseover = true
 	return true
 }
 
-func (b *Button) HandleMouseLeave() {
+func (b *Button) HandlePointerLeave() {
 	b.mouseover = false
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/tinne26/etxt"
 	"github.com/yohamta/furex/examples/game/sprites"
 	"github.com/yohamta/furex/examples/game/text"
@@ -19,6 +20,9 @@ type Game struct {
 	initOnce sync.Once
 	screen   screen
 	gameUI   *furex.View
+
+	gamepadIDsBuf []ebiten.GamepadID
+	gamepadFound  bool
 }
 
 type screen struct {
@@ -29,7 +33,57 @@ type screen struct {
 func (g *Game) Update() error {
 	g.initOnce.Do(func() { g.setupUI() })
 	g.gameUI.Update()
+
+	if g.gamepadFound {
+		furex.UpdatePointer(time.Second / 60)
+		return nil
+	}
+
+	g.tryUseGamePad()
+
 	return nil
+}
+
+func (g *Game) tryUseGamePad() {
+	g.gamepadIDsBuf = inpututil.AppendJustConnectedGamepadIDs(g.gamepadIDsBuf[:0])
+
+	var bestID ebiten.GamepadID
+	bestButtonCount := -1
+	found := false
+
+	// find entry with most button count, this works best at least for PS5 :P
+	for _, id := range g.gamepadIDsBuf {
+		if !isUsableGamepad(id) {
+			continue
+		}
+
+		buttonCount := ebiten.GamepadButtonCount(id)
+		if buttonCount > bestButtonCount {
+			bestButtonCount = buttonCount
+			bestID = id
+			found = true
+		}
+	}
+
+	if !found {
+		return
+	}
+
+	g.gamepadFound = true
+	furex.CurrentPointerSource = furex.NewGamePadPointerSource(
+		bestID,
+		ebiten.GamepadButton0, // X button on PS5
+		500,
+	).WithBounds(g.screen.Width, g.screen.Height)
+}
+
+func isUsableGamepad(id ebiten.GamepadID) bool {
+	if ebiten.IsStandardGamepadLayoutAvailable(id) {
+		return true
+	}
+
+	// fallback dla padów bez standardowego layoutu
+	return ebiten.GamepadButtonCount(id) >= 8 && ebiten.GamepadAxisCount(id) >= 2
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -183,7 +237,8 @@ func (g *Game) setupUI() {
 }
 
 func main() {
-	ebiten.SetWindowSize(480, 640)
+	w, h := 480, 640
+	ebiten.SetWindowSize(w, h)
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 
 	game, err := NewGame()
