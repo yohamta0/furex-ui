@@ -3,6 +3,7 @@ package furex
 import (
 	"fmt"
 	"image"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -254,36 +255,54 @@ func (v *View) MustGetByID(id string) *View {
 
 // SetLeft sets the left position of the view.
 func (v *View) SetLeft(left int) {
+	if v.Left == left {
+		return
+	}
 	v.Left = left
 	v.Layout()
 }
 
 // SetRight sets the right position of the view.
 func (v *View) SetRight(right int) {
+	if v.Right != nil && *v.Right == right {
+		return
+	}
 	v.Right = Int(right)
 	v.Layout()
 }
 
 // SetTop sets the top position of the view.
 func (v *View) SetTop(top int) {
+	if v.Top == top {
+		return
+	}
 	v.Top = top
 	v.Layout()
 }
 
 // SetBottom sets the bottom position of the view.
 func (v *View) SetBottom(bottom int) {
+	if v.Bottom != nil && *v.Bottom == bottom {
+		return
+	}
 	v.Bottom = Int(bottom)
 	v.Layout()
 }
 
 // SetWidth sets the width of the view.
 func (v *View) SetWidth(width int) {
+	if v.Width == width {
+		return
+	}
 	v.Width = width
 	v.Layout()
 }
 
 // SetHeight sets the height of the view.
 func (v *View) SetHeight(height int) {
+	if v.Height == height {
+		return
+	}
 	v.Height = height
 	v.Layout()
 }
@@ -291,7 +310,8 @@ func (v *View) SetHeight(height int) {
 // SetMargin sets the margins using shorthand syntax
 func (v *View) SetMargin(margin ...int) {
 	top, right, bottom, left, ok := v.expandBoxValues(margin...)
-	if !ok {
+	if !ok || (top == v.MarginTop && right == v.MarginRight &&
+		bottom == v.MarginBottom && left == v.MarginLeft) {
 		return
 	}
 
@@ -304,84 +324,126 @@ func (v *View) SetMargin(margin ...int) {
 
 // SetMarginLeft sets the left margin of the view.
 func (v *View) SetMarginLeft(marginLeft int) {
+	if v.MarginLeft == marginLeft {
+		return
+	}
 	v.MarginLeft = marginLeft
 	v.Layout()
 }
 
 // SetMarginTop sets the top margin of the view.
 func (v *View) SetMarginTop(marginTop int) {
+	if v.MarginTop == marginTop {
+		return
+	}
 	v.MarginTop = marginTop
 	v.Layout()
 }
 
 // SetMarginRight sets the right margin of the view.
 func (v *View) SetMarginRight(marginRight int) {
+	if v.MarginRight == marginRight {
+		return
+	}
 	v.MarginRight = marginRight
 	v.Layout()
 }
 
 // SetMarginBottom sets the bottom margin of the view.
 func (v *View) SetMarginBottom(marginBottom int) {
+	if v.MarginBottom == marginBottom {
+		return
+	}
 	v.MarginBottom = marginBottom
 	v.Layout()
 }
 
 // SetPosition sets the position of the view.
 func (v *View) SetPosition(position Position) {
+	if v.Position == position {
+		return
+	}
 	v.Position = position
 	v.Layout()
 }
 
 // SetDirection sets the direction of the view.
 func (v *View) SetDirection(direction Direction) {
+	if v.Direction == direction {
+		return
+	}
 	v.Direction = direction
 	v.Layout()
 }
 
 // SetWrap sets the wrap property of the view.
 func (v *View) SetWrap(wrap FlexWrap) {
+	if v.Wrap == wrap {
+		return
+	}
 	v.Wrap = wrap
 	v.Layout()
 }
 
 // SetJustify sets the justify property of the view.
 func (v *View) SetJustify(justify Justify) {
+	if v.Justify == justify {
+		return
+	}
 	v.Justify = justify
 	v.Layout()
 }
 
 // SetAlignItems sets the align items property of the view.
 func (v *View) SetAlignItems(alignItems AlignItem) {
+	if v.AlignItems == alignItems {
+		return
+	}
 	v.AlignItems = alignItems
 	v.Layout()
 }
 
 // SetAlignContent sets the align content property of the view.
 func (v *View) SetAlignContent(alignContent AlignContent) {
+	if v.AlignContent == alignContent {
+		return
+	}
 	v.AlignContent = alignContent
 	v.Layout()
 }
 
 // SetGrow sets the grow property of the view.
 func (v *View) SetGrow(grow float64) {
+	if v.Grow == grow {
+		return
+	}
 	v.Grow = grow
 	v.Layout()
 }
 
 // SetShrink sets the shrink property of the view.
 func (v *View) SetShrink(shrink float64) {
+	if v.Shrink == shrink {
+		return
+	}
 	v.Shrink = shrink
 	v.Layout()
 }
 
 // SetDisplay sets the display property of the view.
 func (v *View) SetDisplay(display Display) {
+	if v.Display == display {
+		return
+	}
 	v.Display = display
 	v.Layout()
 }
 
 // SetHidden sets the hidden property of the view.
 func (v *View) SetHidden(hidden bool) {
+	if v.Hidden == hidden {
+		return
+	}
 	v.Hidden = hidden
 	v.Layout()
 }
@@ -408,6 +470,7 @@ func (v *View) Config() ViewConfig {
 		AlignContent: v.AlignContent,
 		Grow:         v.Grow,
 		Shrink:       v.Shrink,
+		Display:      v.Display,
 		children:     []ViewConfig{},
 	}
 	for _, child := range v.getChildren() {
@@ -478,6 +541,7 @@ type ViewConfig struct {
 	AlignContent AlignContent
 	Grow         float64
 	Shrink       float64
+	Display      Display
 	children     []ViewConfig
 }
 
@@ -488,20 +552,25 @@ func (cfg ViewConfig) Tree() string {
 // TODO: This is a bit of a mess. Clean it up.
 func (cfg ViewConfig) tree(indent string) string {
 	sb := &strings.Builder{}
-	sb.WriteString(fmt.Sprintf("%s<%s ", indent, cfg.TagName))
+	fmt.Fprintf(sb, "%s<%s ", indent, cfg.TagName)
 	if cfg.ID != "" {
-		sb.WriteString(fmt.Sprintf("id=\"%s\" ", cfg.ID))
+		fmt.Fprintf(sb, "id=\"%s\" ", cfg.ID)
 	}
 	sb.WriteString("style=\"")
-	sb.WriteString(
-		fmt.Sprintf("left: %d, right: %d, top: %d, bottom: %d, width: %d, height: %d, marginLeft: %d, marginTop: %d, marginRight: %d, marginBottom: %d, position: %s, direction: %s, wrap: %s, justify: %s, alignItems: %s, alignContent: %s, grow: %f, shrink: %f",
-			cfg.Left, *cfg.Right, cfg.Top, *cfg.Bottom, cfg.Width, cfg.Height, cfg.MarginLeft, cfg.MarginTop, cfg.MarginRight, cfg.MarginBottom, cfg.Position, cfg.Direction, cfg.Wrap, cfg.Justify, cfg.AlignItems, cfg.AlignContent, cfg.Grow, cfg.Shrink))
+	intPtrString := func(p *int) string {
+		if p == nil {
+			return "nil"
+		}
+		return strconv.Itoa(*p)
+	}
+	fmt.Fprintf(sb, "left: %d, right: %s, top: %d, bottom: %s, width: %d, height: %d, margin-left: %d, margin-top: %d, margin-right: %d, margin-bottom: %d, display: %s, position: %s, direction: %s, flex-wrap: %s, justify-content: %s, align-items: %s, align-content: %s, flex-grow: %g, flex-shrink: %g",
+		cfg.Left, intPtrString(cfg.Right), cfg.Top, intPtrString(cfg.Bottom), cfg.Width, cfg.Height, cfg.MarginLeft, cfg.MarginTop, cfg.MarginRight, cfg.MarginBottom, cfg.Display, cfg.Position, cfg.Direction, cfg.Wrap, cfg.Justify, cfg.AlignItems, cfg.AlignContent, cfg.Grow, cfg.Shrink)
 	sb.WriteString("\">\n")
 	for _, child := range cfg.children {
 		sb.WriteString(child.tree(indent + "  "))
 		sb.WriteString("\n")
 	}
-	sb.WriteString(fmt.Sprintf("%s</%s>", indent, cfg.TagName))
+	fmt.Fprintf(sb, "%s</%s>", indent, cfg.TagName)
 	sb.WriteString("\n")
 	return sb.String()
 }
