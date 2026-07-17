@@ -3,6 +3,7 @@ package furex
 import (
 	"fmt"
 	"image"
+	"iter"
 	"strings"
 	"sync"
 
@@ -141,6 +142,12 @@ func (v *View) AddTo(parent *View) *View {
 	return v
 }
 
+// Parent returns the parent view of v.
+// If v has no parent (i.e., it's the top-level view), Parent returns nil.
+func (v *View) Parent() *View {
+	return v.parent
+}
+
 // AddChild adds one or multiple child views
 func (v *View) AddChild(views ...*View) *View {
 	for _, vv := range views {
@@ -226,6 +233,23 @@ func (v *View) getChildren() []*View {
 		ret[i] = child.item
 	}
 	return ret
+}
+
+// Children returns an iterator over all direct child views of v.
+//
+// IMPORTANT: Do NOT call AddChild, RemoveChild, or any method that modifies
+// the children list during iteration, as this may cause data races, skipped
+// elements, or other undefined behavior.
+// If you need to modify the children list, collect the nodes to be added or removed
+// into a slice first, then apply all changes after the iteration completes.
+func (v *View) Children() iter.Seq[*View] {
+	return func(yield func(*View) bool) {
+		for _, child := range v.children {
+			if !yield(child.item) {
+				return
+			}
+		}
+	}
 }
 
 // GetByID returns the view with the specified id.
