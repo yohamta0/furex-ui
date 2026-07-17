@@ -3,6 +3,7 @@ package furex
 import (
 	"fmt"
 	"image"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -469,6 +470,7 @@ func (v *View) Config() ViewConfig {
 		AlignContent: v.AlignContent,
 		Grow:         v.Grow,
 		Shrink:       v.Shrink,
+		Display:      v.Display,
 		children:     []ViewConfig{},
 	}
 	for _, child := range v.getChildren() {
@@ -539,6 +541,7 @@ type ViewConfig struct {
 	AlignContent AlignContent
 	Grow         float64
 	Shrink       float64
+	Display      Display
 	children     []ViewConfig
 }
 
@@ -549,20 +552,25 @@ func (cfg ViewConfig) Tree() string {
 // TODO: This is a bit of a mess. Clean it up.
 func (cfg ViewConfig) tree(indent string) string {
 	sb := &strings.Builder{}
-	sb.WriteString(fmt.Sprintf("%s<%s ", indent, cfg.TagName))
+	fmt.Fprintf(sb, "%s<%s ", indent, cfg.TagName)
 	if cfg.ID != "" {
-		sb.WriteString(fmt.Sprintf("id=\"%s\" ", cfg.ID))
+		fmt.Fprintf(sb, "id=\"%s\" ", cfg.ID)
 	}
 	sb.WriteString("style=\"")
-	sb.WriteString(
-		fmt.Sprintf("left: %d, right: %d, top: %d, bottom: %d, width: %d, height: %d, marginLeft: %d, marginTop: %d, marginRight: %d, marginBottom: %d, position: %s, direction: %s, wrap: %s, justify: %s, alignItems: %s, alignContent: %s, grow: %f, shrink: %f",
-			cfg.Left, *cfg.Right, cfg.Top, *cfg.Bottom, cfg.Width, cfg.Height, cfg.MarginLeft, cfg.MarginTop, cfg.MarginRight, cfg.MarginBottom, cfg.Position, cfg.Direction, cfg.Wrap, cfg.Justify, cfg.AlignItems, cfg.AlignContent, cfg.Grow, cfg.Shrink))
+	intPtrString := func(p *int) string {
+		if p == nil {
+			return "nil"
+		}
+		return strconv.Itoa(*p)
+	}
+	fmt.Fprintf(sb, "left: %d, right: %s, top: %d, bottom: %s, width: %d, height: %d, margin-left: %d, margin-top: %d, margin-right: %d, margin-bottom: %d, display: %s, position: %s, direction: %s, flex-wrap: %s, justify-content: %s, align-items: %s, align-content: %s, flex-grow: %g, flex-shrink: %g",
+		cfg.Left, intPtrString(cfg.Right), cfg.Top, intPtrString(cfg.Bottom), cfg.Width, cfg.Height, cfg.MarginLeft, cfg.MarginTop, cfg.MarginRight, cfg.MarginBottom, cfg.Display, cfg.Position, cfg.Direction, cfg.Wrap, cfg.Justify, cfg.AlignItems, cfg.AlignContent, cfg.Grow, cfg.Shrink)
 	sb.WriteString("\">\n")
 	for _, child := range cfg.children {
 		sb.WriteString(child.tree(indent + "  "))
 		sb.WriteString("\n")
 	}
-	sb.WriteString(fmt.Sprintf("%s</%s>", indent, cfg.TagName))
+	fmt.Fprintf(sb, "%s</%s>", indent, cfg.TagName)
 	sb.WriteString("\n")
 	return sb.String()
 }
