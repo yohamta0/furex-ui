@@ -12,6 +12,20 @@ type secondaryButtonHandler struct {
 	released int
 }
 
+type primaryButtonHandler struct {
+	pressed  int
+	released int
+}
+
+func (h *primaryButtonHandler) HandleJustPressedPointerButtonPrimary(int, int) bool {
+	h.pressed++
+	return true
+}
+
+func (h *primaryButtonHandler) HandleJustReleasedPointerButtonPrimary(int, int) {
+	h.released++
+}
+
 func (h *secondaryButtonHandler) HandleJustPressedPointerButtonSecondary(int, int) bool {
 	h.pressed++
 	return true
@@ -19,6 +33,20 @@ func (h *secondaryButtonHandler) HandleJustPressedPointerButtonSecondary(int, in
 
 func (h *secondaryButtonHandler) HandleJustReleasedPointerButtonSecondary(int, int) {
 	h.released++
+}
+
+func TestPointerPrimaryButtonHandler(t *testing.T) {
+	h := &primaryButtonHandler{}
+	ct := &containerEmbed{children: []*child{{
+		item:   &View{Handler: h},
+		bounds: image.Rect(10, 10, 30, 30),
+	}}}
+
+	require.True(t, ct.handlePointerButtonPressed(pointerPrimary, 20, 20))
+	ct.handlePointerButtonReleased(pointerPrimary, 40, 40)
+
+	require.Equal(t, 1, h.pressed)
+	require.Equal(t, 1, h.released)
 }
 
 func TestPointerSecondaryButtonHandler(t *testing.T) {
