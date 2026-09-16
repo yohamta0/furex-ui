@@ -9,13 +9,13 @@ import (
 )
 
 type child struct {
-	absolute                 bool
-	item                     *View
-	bounds                   image.Rectangle
-	isButtonPressed          bool
-	isMouseLeftButtonHandler bool
-	isPointerEntered         bool
-	handledTouchID           ebiten.TouchID
+	absolute         bool
+	item             *View
+	bounds           image.Rectangle
+	isButtonPressed  bool
+	pointerButtons   [pointerButtonCount]bool
+	isPointerEntered bool
+	handledTouchID   ebiten.TouchID
 	swipe
 }
 

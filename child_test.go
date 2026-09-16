@@ -203,8 +203,8 @@ func testMouchClick(t *testing.T, flex *View, h *mockHandler, frame image.Rectan
 		t.Run(tt.Scenario, func(t *testing.T) {
 			h.Init()
 
-			flex.handleMouseButtonLeftPressed(tt.Start.X, tt.Start.Y)
-			flex.handleMouseButtonLeftReleased(tt.End.X, tt.End.Y)
+			flex.handlePointerButtonPressed(pointerPrimary, tt.Start.X, tt.Start.Y)
+			flex.handlePointerButtonReleased(pointerPrimary, tt.End.X, tt.End.Y)
 
 			assert.Equal(t, tt.Want, result{h.IsPressed, h.IsReleased, h.IsCancel})
 		})

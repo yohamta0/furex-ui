@@ -84,6 +84,16 @@ type PointerPrimaryButtonHandler interface {
 	HandleJustReleasedPointerButtonPrimary(x, y int)
 }
 
+// PointerSecondaryButtonHandler handles secondary pointer (mouse right button) clicks.
+type PointerSecondaryButtonHandler interface {
+	// HandleJustPressedPointerButtonSecondary returns true to consume the press.
+	// Coordinates are relative to the window (0,0).
+	HandleJustPressedPointerButtonSecondary(x, y int) bool
+	// HandleJustReleasedPointerButtonSecondary is called only after consuming a press,
+	// even when released outside the view. Coordinates are relative to the window.
+	HandleJustReleasedPointerButtonSecondary(x, y int)
+}
+
 // PointerEnterLeaveHandler represents a component that handle pointer enter/leave.
 type PointerEnterLeaveHandler interface {
 	// HandlePointerEnter handles the pointer enter.

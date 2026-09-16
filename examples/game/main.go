@@ -70,7 +70,7 @@ func (g *Game) tryUseGamePad() {
 	}
 
 	g.gamepadFound = true
-	furex.CurrentPointerSource = furex.NewGamePadPointerSource(
+	furex.CurrentPrimaryPointerSource = furex.NewGamePadPointerSource(
 		bestID,
 		ebiten.GamepadButton0, // X button on PS5
 		500,
