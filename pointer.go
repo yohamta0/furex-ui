@@ -3,7 +3,8 @@ package furex
 import "time"
 
 var (
-	CurrentPointerSource = NewMousePointerSource()
+	CurrentPrimaryPointerSource                 = NewMousePrimaryPointerSource()
+	CurrentSecondaryPointerSource PointerSource = NewMouseSecondaryPointerSource()
 )
 
 type PointerSource interface {
@@ -13,6 +14,10 @@ type PointerSource interface {
 	IsJustReleased() bool
 }
 
+// UpdatePointer updates the primary and secondary input sources.
 func UpdatePointer(dt time.Duration) {
-	CurrentPointerSource.Update(dt)
+	CurrentPrimaryPointerSource.Update(dt)
+	if CurrentSecondaryPointerSource != nil {
+		CurrentSecondaryPointerSource.Update(dt)
+	}
 }

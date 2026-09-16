@@ -152,7 +152,7 @@ func (ct *containerEmbed) handlePointerEnterLeave(x, y int) bool {
 	return result
 }
 
-func (ct *containerEmbed) handleMouseButtonLeftPressed(x, y int) bool {
+func (ct *containerEmbed) handlePointerButtonPressed(buttonID pointerButton, x, y int) bool {
 	result := false
 
 	for c := len(ct.children) - 1; c >= 0; c-- {
@@ -161,18 +161,19 @@ func (ct *containerEmbed) handleMouseButtonLeftPressed(x, y int) bool {
 		if child.item.Display == DisplayNone {
 			continue
 		}
-		mouseLeftClickHandler, ok := child.item.Handler.(PointerPrimaryButtonHandler)
+		press, _, ok := pointerButtonCallbacks(child.item.Handler, buttonID)
+		claimed := &child.pointerButtons[buttonID]
 		if ok {
 			if !result && isInside(childFrame, x, y) {
-				if mouseLeftClickHandler.HandleJustPressedPointerButtonPrimary(x, y) {
+				if press(x, y) {
 					result = true
-					child.isMouseLeftButtonHandler = true
+					*claimed = true
 				}
 			}
 		}
 
 		button, ok := child.item.Handler.(ButtonHandler)
-		if ok {
+		if ok && buttonID == pointerPrimary {
 			for {
 				if button, ok := child.item.Handler.(NotButton); ok {
 					if !button.IsButton() {
@@ -182,7 +183,7 @@ func (ct *containerEmbed) handleMouseButtonLeftPressed(x, y int) bool {
 				if !result && isInside(childFrame, x, y) {
 					if !child.isButtonPressed {
 						child.isButtonPressed = true
-						child.isMouseLeftButtonHandler = true
+						child.isButtonPressedByPointer = true
 						result = true
 						button.HandlePress(x, y, -1)
 					}
@@ -191,29 +192,21 @@ func (ct *containerEmbed) handleMouseButtonLeftPressed(x, y int) bool {
 			}
 		}
 
-		if !result && child.item.handleMouseButtonLeftPressed(x, y) {
+		if !result && child.item.handlePointerButtonPressed(buttonID, x, y) {
 			result = true
 		}
 	}
 	return result
 }
 
-func (ct *containerEmbed) handleMouseButtonLeftReleased(x, y int) {
+func (ct *containerEmbed) handlePointerButtonReleased(buttonID pointerButton, x, y int) {
 	for c := len(ct.children) - 1; c >= 0; c-- {
 		child := ct.children[c]
-		mouseLeftClickHandler, ok := child.item.Handler.(PointerPrimaryButtonHandler)
-		if ok {
-			if child.isMouseLeftButtonHandler {
-				child.isMouseLeftButtonHandler = false
-				mouseLeftClickHandler.HandleJustReleasedPointerButtonPrimary(x, y)
-			}
-		}
-
 		button, ok := child.item.Handler.(ButtonHandler)
-		if ok {
-			if child.isButtonPressed && child.isMouseLeftButtonHandler {
+		if ok && buttonID == pointerPrimary {
+			if child.isButtonPressedByPointer {
 				child.isButtonPressed = false
-				child.isMouseLeftButtonHandler = false
+				child.isButtonPressedByPointer = false
 				if x == 0 && y == 0 {
 					button.HandleRelease(x, y, true)
 				} else {
@@ -221,8 +214,14 @@ func (ct *containerEmbed) handleMouseButtonLeftReleased(x, y int) {
 				}
 			}
 		}
+		_, release, ok := pointerButtonCallbacks(child.item.Handler, buttonID)
+		claimed := &child.pointerButtons[buttonID]
+		if ok && *claimed {
+			*claimed = false
+			release(x, y)
+		}
 
-		child.item.handleMouseButtonLeftReleased(x, y)
+		child.item.handlePointerButtonReleased(buttonID, x, y)
 	}
 }
 
@@ -257,14 +256,23 @@ func (ct *containerEmbed) handleTouchEvents() {
 }
 
 func (ct *containerEmbed) handlePointerEvents() {
-	x, y := CurrentPointerSource.ReadPosition()
+	x, y := CurrentPrimaryPointerSource.ReadPosition()
 	ct.handlePointer(x, y)
 	ct.handlePointerEnterLeave(x, y)
-	if CurrentPointerSource.IsJustPressed() {
-		ct.handleMouseButtonLeftPressed(x, y)
+	ct.handlePointerButtonEvents(CurrentPrimaryPointerSource, pointerPrimary)
+	ct.handlePointerButtonEvents(CurrentSecondaryPointerSource, pointerSecondary)
+}
+
+func (ct *containerEmbed) handlePointerButtonEvents(source PointerSource, button pointerButton) {
+	if source == nil {
+		return
 	}
-	if CurrentPointerSource.IsJustReleased() {
-		ct.handleMouseButtonLeftReleased(x, y)
+	x, y := source.ReadPosition()
+	if source.IsJustPressed() {
+		ct.handlePointerButtonPressed(button, x, y)
+	}
+	if source.IsJustReleased() {
+		ct.handlePointerButtonReleased(button, x, y)
 	}
 }
 
