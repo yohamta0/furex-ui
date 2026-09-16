@@ -183,6 +183,7 @@ func (ct *containerEmbed) handlePointerButtonPressed(buttonID pointerButton, x, 
 				if !result && isInside(childFrame, x, y) {
 					if !child.isButtonPressed {
 						child.isButtonPressed = true
+						child.isButtonPressedByPointer = true
 						result = true
 						button.HandlePress(x, y, -1)
 					}
@@ -203,8 +204,9 @@ func (ct *containerEmbed) handlePointerButtonReleased(buttonID pointerButton, x,
 		child := ct.children[c]
 		button, ok := child.item.Handler.(ButtonHandler)
 		if ok && buttonID == pointerPrimary {
-			if child.isButtonPressed {
+			if child.isButtonPressedByPointer {
 				child.isButtonPressed = false
+				child.isButtonPressedByPointer = false
 				if x == 0 && y == 0 {
 					button.HandleRelease(x, y, true)
 				} else {
