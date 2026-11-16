@@ -77,6 +77,20 @@ func TestPointerSecondaryButtonMiss(t *testing.T) {
 	require.Zero(t, h.released)
 }
 
+func TestPointerPrimaryButtonNestedChildConsumesPress(t *testing.T) {
+	parentHandler := &primaryButtonHandler{}
+	childHandler := &primaryButtonHandler{}
+	ct := nestedContainer(parentHandler, childHandler)
+
+	require.True(t, ct.handlePointerButtonPressed(pointerPrimary, 100, 100))
+	ct.handlePointerButtonReleased(pointerPrimary, 100, 100)
+
+	require.Equal(t, 1, childHandler.pressed)
+	require.Equal(t, 0, parentHandler.pressed)
+	require.Equal(t, 1, childHandler.released)
+	require.Equal(t, 0, parentHandler.released)
+}
+
 func TestButtonInputOwnership(t *testing.T) {
 	newState := func() (*containerEmbed, *child, *mockHandler, *image.Rectangle) {
 		h := &mockHandler{}

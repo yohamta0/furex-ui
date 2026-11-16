@@ -82,6 +82,7 @@ func (ct *containerEmbed) HandleJustPressedTouchID(touchID ebiten.TouchID, x, y 
 			continue
 		}
 		if child.item.HandleJustPressedTouchID(touchID, x, y) {
+			child.checkSwipeHandlerStart(childFrame, touchID, x, y)
 			return true
 		}
 		if child.HandleJustPressedTouchID(childFrame, touchID, x, y) {
@@ -130,10 +131,6 @@ func (ct *containerEmbed) handlePointerEnterLeave(x, y int) bool {
 		if child.item.Display == DisplayNone {
 			continue
 		}
-		if child.item.handlePointerEnterLeave(x, y) {
-			result = true
-		}
-
 		pointerHandler, ok := child.item.Handler.(PointerEnterLeaveHandler)
 		if ok {
 			if !result && !child.isPointerEntered && isInside(childFrame, x, y) {
@@ -147,6 +144,10 @@ func (ct *containerEmbed) handlePointerEnterLeave(x, y int) bool {
 				child.isPointerEntered = false
 				pointerHandler.HandlePointerLeave()
 			}
+		}
+
+		if child.item.handlePointerEnterLeave(x, y) {
+			result = true
 		}
 	}
 	return result
