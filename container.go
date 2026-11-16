@@ -81,10 +81,11 @@ func (ct *containerEmbed) HandleJustPressedTouchID(touchID ebiten.TouchID, x, y 
 		if child.item.Display == DisplayNone {
 			continue
 		}
-		if child.HandleJustPressedTouchID(childFrame, touchID, x, y) {
+		if child.item.HandleJustPressedTouchID(touchID, x, y) {
+			child.checkSwipeHandlerStart(childFrame, touchID, x, y)
 			return true
 		}
-		if child.item.HandleJustPressedTouchID(touchID, x, y) {
+		if child.HandleJustPressedTouchID(childFrame, touchID, x, y) {
 			return true
 		}
 	}
@@ -107,6 +108,9 @@ func (ct *containerEmbed) handlePointer(x, y int) bool {
 		if child.item.Display == DisplayNone {
 			continue
 		}
+		if child.item.handlePointer(x, y) {
+			return true
+		}
 		pointerHandler, ok := child.item.Handler.(PointerHandler)
 		if ok && pointerHandler != nil {
 			if isInside(childFrame, x, y) {
@@ -114,9 +118,6 @@ func (ct *containerEmbed) handlePointer(x, y int) bool {
 					return true
 				}
 			}
-		}
-		if child.item.handlePointer(x, y) {
-			return true
 		}
 	}
 	return false
@@ -161,6 +162,10 @@ func (ct *containerEmbed) handlePointerButtonPressed(buttonID pointerButton, x, 
 		if child.item.Display == DisplayNone {
 			continue
 		}
+		if !result && child.item.handlePointerButtonPressed(buttonID, x, y) {
+			result = true
+		}
+
 		press, _, ok := pointerButtonCallbacks(child.item.Handler, buttonID)
 		claimed := &child.pointerButtons[buttonID]
 		if ok {
@@ -190,10 +195,6 @@ func (ct *containerEmbed) handlePointerButtonPressed(buttonID pointerButton, x, 
 				}
 				break
 			}
-		}
-
-		if !result && child.item.handlePointerButtonPressed(buttonID, x, y) {
-			result = true
 		}
 	}
 	return result
