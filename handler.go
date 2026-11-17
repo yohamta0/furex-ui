@@ -94,6 +94,14 @@ type PointerSecondaryButtonHandler interface {
 	HandleJustReleasedPointerButtonSecondary(x, y int)
 }
 
+// WheelHandler represents a component that handles mouse wheel or touchpad scroll.
+type WheelHandler interface {
+	// HandleWheel handles the wheel scroll and returns true if it handles the scroll.
+	// The parameter (x, y) is the location relative to the window (0,0).
+	// The parameters (dx, dy) are the wheel offsets in the current tick.
+	HandleWheel(x, y int, dx, dy float64) bool
+}
+
 // PointerEnterLeaveHandler represents a component that handle pointer enter/leave.
 type PointerEnterLeaveHandler interface {
 	// HandlePointerEnter handles the pointer enter.

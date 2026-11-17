@@ -262,6 +262,36 @@ func (ct *containerEmbed) handlePointerEvents() {
 	ct.handlePointerEnterLeave(x, y)
 	ct.handlePointerButtonEvents(CurrentPrimaryPointerSource, pointerPrimary)
 	ct.handlePointerButtonEvents(CurrentSecondaryPointerSource, pointerSecondary)
+	ct.handleWheelEvents()
+}
+
+func (ct *containerEmbed) handleWheelEvents() {
+	dx, dy := ebiten.Wheel()
+	if dx == 0 && dy == 0 {
+		return
+	}
+	x, y := CurrentPrimaryPointerSource.ReadPosition()
+	ct.handleWheel(x, y, dx, dy)
+}
+
+func (ct *containerEmbed) handleWheel(x, y int, dx, dy float64) bool {
+	for c := len(ct.children) - 1; c >= 0; c-- {
+		child := ct.children[c]
+		childFrame := ct.childFrame(child)
+		if child.item.Display == DisplayNone {
+			continue
+		}
+		if child.item.handleWheel(x, y, dx, dy) {
+			return true
+		}
+		wheelHandler, ok := child.item.Handler.(WheelHandler)
+		if ok && isInside(childFrame, x, y) {
+			if wheelHandler.HandleWheel(x, y, dx, dy) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (ct *containerEmbed) handlePointerButtonEvents(source PointerSource, button pointerButton) {
