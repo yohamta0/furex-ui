@@ -32,6 +32,10 @@ func (m MousePrimaryPointerSource) IsJustReleased() bool {
 	return inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft)
 }
 
+func (m MousePrimaryPointerSource) ReadWheel() (float64, float64) {
+	return ebiten.Wheel()
+}
+
 func (m MouseSecondaryPointerSource) Update(time.Duration) {
 }
 

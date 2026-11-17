@@ -266,7 +266,11 @@ func (ct *containerEmbed) handlePointerEvents() {
 }
 
 func (ct *containerEmbed) handleWheelEvents() {
-	dx, dy := ebiten.Wheel()
+	source, ok := CurrentPrimaryPointerSource.(WheelSource)
+	if !ok {
+		return
+	}
+	dx, dy := source.ReadWheel()
 	if dx == 0 && dy == 0 {
 		return
 	}
