@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/yohamta/furex/v2"
 )
 
@@ -79,13 +79,14 @@ type Box struct {
 var _ furex.Drawer = (*Box)(nil)
 
 func (b *Box) Draw(screen *ebiten.Image, frame image.Rectangle, view *furex.View) {
-	ebitenutil.DrawRect(
+	vector.FillRect(
 		screen,
-		float64(frame.Min.X),
-		float64(frame.Min.Y),
-		float64(frame.Size().X),
-		float64(frame.Size().Y),
+		float32(frame.Min.X),
+		float32(frame.Min.Y),
+		float32(frame.Size().X),
+		float32(frame.Size().Y),
 		b.Color,
+		false,
 	)
 }
 

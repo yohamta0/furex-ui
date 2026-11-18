@@ -4,13 +4,14 @@ import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/colorm"
 	"github.com/yohamta/furex/v2/internal/graphic"
 )
 
 var (
 	Debug           = false
 	debugColor      = color.RGBA{0xff, 0, 0, 0xff}
-	debugColorShift = ebiten.ColorM{}
+	debugColorShift = colorm.ColorM{}
 )
 
 func debugBorders(screen *ebiten.Image, root containerEmbed) {
@@ -49,6 +50,6 @@ func rotateDebugColor() color.Color {
 }
 
 func resetDebugColor() color.Color {
-	debugColorShift = ebiten.ColorM{}
+	debugColorShift = colorm.ColorM{}
 	return debugColor
 }

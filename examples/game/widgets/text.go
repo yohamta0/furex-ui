@@ -5,7 +5,7 @@ import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/tinne26/etxt"
 	"github.com/yohamta/furex/examples/game/text"
 	"github.com/yohamta/furex/v2"
@@ -25,8 +25,8 @@ var (
 
 func (t *Text) Draw(screen *ebiten.Image, frame image.Rectangle, view *furex.View) {
 	if t.Shadow {
-		ebitenutil.DrawRect(
-			screen, float64(frame.Min.X), float64(frame.Min.Y), float64(len(view.Text)*6+4), float64(frame.Dy()), color.RGBA{0, 0, 0, 50})
+		vector.FillRect(
+			screen, float32(frame.Min.X), float32(frame.Min.Y), float32(len(view.Text)*6+4), float32(frame.Dy()), color.RGBA{0, 0, 0, 50}, false)
 	}
 	x, y := frame.Min.X+frame.Dx()/2, frame.Min.Y+frame.Dy()/2
 	if t.HorzAlign == etxt.Left {

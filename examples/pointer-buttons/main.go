@@ -7,6 +7,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/yohamta/furex/v2"
 )
 
@@ -40,7 +41,7 @@ var _ furex.PointerPrimaryButtonHandler = (*buttonBox)(nil)
 var _ furex.PointerSecondaryButtonHandler = (*buttonBox)(nil)
 
 func (b *buttonBox) Draw(screen *ebiten.Image, frame image.Rectangle, _ *furex.View) {
-	ebitenutil.DrawRect(screen, float64(frame.Min.X), float64(frame.Min.Y), float64(frame.Dx()), float64(frame.Dy()), b.Color)
+	vector.FillRect(screen, float32(frame.Min.X), float32(frame.Min.Y), float32(frame.Dx()), float32(frame.Dy()), b.Color, false)
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("%s\nLeft: %d  Right: %d", b.label, b.left, b.right), frame.Min.X+12, frame.Min.Y+12)
 }
 func (b *buttonBox) HandleJustPressedPointerButtonPrimary(int, int) bool   { b.left++; return true }
