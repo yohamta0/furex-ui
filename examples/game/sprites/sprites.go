@@ -40,7 +40,12 @@ func LoadSprites(xmlPath string, imgPath string, opts LoadOpts) {
 		panic(err)
 	}
 
-	img, _, err := ebitenutil.NewImageFromFile(imgPath)
+	f, err := os.Open(imgPath)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	img, _, err := ebitenutil.NewImageFromReader(f)
 	if err != nil {
 		panic(err)
 	}
