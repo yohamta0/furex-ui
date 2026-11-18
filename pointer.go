@@ -14,6 +14,12 @@ type PointerSource interface {
 	IsJustReleased() bool
 }
 
+// WheelSource represents an optional pointer source that supports wheel input.
+type WheelSource interface {
+	// ReadWheel returns the wheel offsets in the current tick.
+	ReadWheel() (dx, dy float64)
+}
+
 // UpdatePointer updates the primary and secondary input sources.
 func UpdatePointer(dt time.Duration) {
 	CurrentPrimaryPointerSource.Update(dt)
