@@ -460,9 +460,10 @@ func (f *flexEmbed) layout(width, height int, container *containerEmbed) {
 			line := &lines[l]
 			max := 0.0
 			for _, child := range line.child {
-				if child.crossSize > max {
-					max = child.crossSize +
-						(child.crossMargin[0] + child.crossMargin[1])
+				outerCrossSize := child.crossSize +
+					(child.crossMargin[0] + child.crossMargin[1])
+				if outerCrossSize > max {
+					max = outerCrossSize
 				}
 			}
 			line.crossSize = max
@@ -623,7 +624,8 @@ func (f *flexEmbed) layout(width, height int, container *containerEmbed) {
 		// 3. Determine line size and update intrinsicMainSize.
 		lineSize := 0.0
 		for _, child := range line.child {
-			lineSize += child.mainSize
+			lineSize += child.mainSize +
+				(child.mainMargin[0] + child.mainMargin[1])
 		}
 		if lineSize > intrinsicMainSize {
 			intrinsicMainSize = lineSize
@@ -640,19 +642,13 @@ func (f *flexEmbed) layout(width, height int, container *containerEmbed) {
 		if intrinsicCrossSize < line.crossOffset+line.crossSize {
 			intrinsicCrossSize = line.crossOffset + line.crossSize
 		}
-
-		min := math.Inf(1)
-		max := -1.
 		for _, child := range line.child {
-			if child.crossOffset < min {
-				min = child.crossOffset
+			outerCrossSize := child.crossMargin[0] +
+				child.crossSize +
+				child.crossMargin[1]
+			if intrinsicCrossSize < outerCrossSize {
+				intrinsicCrossSize = outerCrossSize
 			}
-			if max == -1 || child.crossOffset+child.crossSize > max {
-				max = child.crossOffset + child.crossSize
-			}
-		}
-		if intrinsicCrossSize < max-min {
-			intrinsicCrossSize = max - min
 		}
 	}
 	f.setCrossSize(int(intrinsicCrossSize))
