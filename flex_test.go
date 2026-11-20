@@ -1036,6 +1036,92 @@ func TestShrink(t *testing.T) {
 	assert.Equal(t, image.Pt(w, h*items), mock.Frame.Size())
 }
 
+func TestMarginsInIntrinsicSize(t *testing.T) {
+	tests := []struct {
+		name      string
+		direction Direction
+		wantW     int
+		wantH     int
+	}{
+		{
+			name:      "row",
+			direction: Row,
+			wantW:     140,
+			wantH:     40,
+		},
+		{
+			name:      "column",
+			direction: Column,
+			wantW:     70,
+			wantH:     80,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			flex := &View{Direction: tt.direction}
+			for i := 0; i < 2; i++ {
+				flex.AddChild(&View{
+					Width:        50,
+					Height:       20,
+					MarginTop:    10,
+					MarginRight:  10,
+					MarginBottom: 10,
+					MarginLeft:   10,
+				})
+			}
+
+			flex.Update()
+
+			require.Equal(t, tt.wantW, flex.calculatedWidth)
+			require.Equal(t, tt.wantH, flex.calculatedHeight)
+		})
+	}
+}
+
+func TestMarginsIncludedInParentSize(t *testing.T) {
+	root := &View{Width: 480, Height: 480, Direction: Column}
+	group := &View{}
+	for i := 0; i < 4; i++ {
+		group.AddChild(&View{
+			Width:        50,
+			Height:       20,
+			MarginTop:    10,
+			MarginRight:  10,
+			MarginBottom: 10,
+			MarginLeft:   10,
+		})
+	}
+	below := &View{}
+	root.AddChild(group, below)
+
+	root.Update()
+
+	require.Equal(t, 280, group.calculatedWidth)
+	require.Equal(t, 40, group.calculatedHeight)
+	require.Equal(t, 40, group.Frame().Dy())
+	require.Equal(t, 40, below.Frame().Min.Y)
+}
+
+func TestMarginsInWrappedLineCrossSize(t *testing.T) {
+	flex := &View{
+		Width:     120,
+		Direction: Row,
+		Wrap:      Wrap,
+	}
+	flex.AddChild(&View{Width: 60, Height: 60})
+	flex.AddChild(&View{
+		Width:        50,
+		Height:       50,
+		MarginTop:    20,
+		MarginBottom: 20,
+	})
+	flex.AddChild(&View{Width: 60, Height: 30})
+
+	flex.Update()
+
+	require.Equal(t, 120, flex.calculatedHeight)
+}
+
 func flexItemBounds(parent *View, child *View) image.Rectangle {
 	mock := &mockHandler{}
 	child.Handler = mock
