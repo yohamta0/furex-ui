@@ -63,6 +63,24 @@ func TestParseHTML(t *testing.T) {
 			}),
 		},
 		{
+			name: "margin shorthand",
+			html: `
+				<view style="margin: 10px 20px 30px 40px; margin-left: 50">
+					<view style="margin: 5px 10px"></view>
+				</view>`,
+			expected: (&View{
+				MarginTop:    10,
+				MarginRight:  20,
+				MarginBottom: 30,
+				MarginLeft:   50,
+			}).AddChild(&View{
+				MarginTop:    5,
+				MarginRight:  10,
+				MarginBottom: 5,
+				MarginLeft:   10,
+			}),
+		},
+		{
 			name: "nested",
 			html: `
 				<view>
@@ -563,6 +581,77 @@ func TestParseHTML(t *testing.T) {
 			if tt.after != nil {
 				tt.after(t, v)
 			}
+		})
+	}
+}
+
+func TestParseMargin(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected [4]int
+		wantErr  bool
+	}{
+		{
+			name:     "one value",
+			input:    "10px",
+			expected: [4]int{10, 10, 10, 10},
+		},
+		{
+			name:     "two values",
+			input:    "10px 20px",
+			expected: [4]int{10, 20, 10, 20},
+		},
+		{
+			name:     "three values",
+			input:    "10px 20px 30px",
+			expected: [4]int{10, 20, 30, 20},
+		},
+		{
+			name:     "four values",
+			input:    "10px 20px 30px 40px",
+			expected: [4]int{10, 20, 30, 40},
+		},
+		{
+			name:     "unitless values",
+			input:    "10 20",
+			expected: [4]int{10, 20, 10, 20},
+		},
+		{
+			name:     "negative values",
+			input:    "-10px 20px",
+			expected: [4]int{-10, 20, -10, 20},
+		},
+		{
+			name:     "extra whitespace",
+			input:    "  10px\t20px  30px  ",
+			expected: [4]int{10, 20, 30, 20},
+		},
+		{
+			name:    "invalid value",
+			input:   "10px auto",
+			wantErr: true,
+		},
+		{
+			name:    "too many values",
+			input:   "1px 2px 3px 4px 5px",
+			wantErr: true,
+		},
+		{
+			name:    "empty",
+			input:   "",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseMargin(tt.input)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tt.expected, got)
 		})
 	}
 }

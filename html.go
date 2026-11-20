@@ -300,6 +300,15 @@ var styleMapper = map[string]mapper[View]{
 			}
 		}),
 	},
+	"margin": {
+		parseFunc: parseMargin,
+		setFunc: setFunc(func(v *View, vals [4]int) {
+			v.MarginTop = vals[0]
+			v.MarginRight = vals[1]
+			v.MarginBottom = vals[2]
+			v.MarginLeft = vals[3]
+		}),
+	},
 	"margin-left": {
 		parseFunc: parseNumber,
 		setFunc:   setFunc(func(v *View, val int) { v.MarginLeft = val }),
@@ -436,6 +445,34 @@ func parseNumber(val string) (any, error) {
 
 func parseFloat(val string) (any, error) {
 	return strconv.ParseFloat(val, 64)
+}
+
+func parseMargin(val string) (any, error) {
+	ss := strings.Fields(val)
+	if len(ss) == 0 || len(ss) > 4 {
+		return [4]int{}, fmt.Errorf("invalid margin: %q", val)
+	}
+	vals := [4]int{} // t r b l
+	for i, s := range ss {
+		n, err := strconv.Atoi(strings.TrimSuffix(s, "px"))
+		if err != nil {
+			return [4]int{}, err
+		}
+		vals[i] = n
+	}
+
+	switch len(ss) {
+	case 1:
+		vals[1] = vals[0]
+		vals[2] = vals[0]
+		vals[3] = vals[0]
+	case 2:
+		vals[2] = vals[0]
+		vals[3] = vals[1]
+	case 3:
+		vals[3] = vals[1]
+	}
+	return vals, nil
 }
 
 func parsePosition(val string) (any, error) {
