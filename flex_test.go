@@ -1036,6 +1036,107 @@ func TestShrink(t *testing.T) {
 	assert.Equal(t, image.Pt(w, h*items), mock.Frame.Size())
 }
 
+func TestResizeShrinkStretch(t *testing.T) {
+	tests := []struct {
+		name      string
+		direction Direction
+	}{
+		{name: "row", direction: Row},
+		{name: "column", direction: Column},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := &View{Direction: tt.direction}
+			child := &View{Grow: 1, Shrink: 1}
+			root.AddChild(child)
+
+			root.UpdateWithSize(800, 600)
+			require.Equal(t, image.Rect(0, 0, 800, 600), child.Frame())
+
+			root.UpdateWithSize(1000, 800)
+			require.Equal(t, image.Rect(0, 0, 1000, 800), child.Frame())
+
+			root.UpdateWithSize(400, 300)
+			require.Equal(t, image.Rect(0, 0, 400, 300), child.Frame())
+
+			root.UpdateWithSize(800, 600)
+			require.Equal(t, image.Rect(0, 0, 800, 600), child.Frame())
+		})
+	}
+}
+
+func TestShrinkFixedMainSize(t *testing.T) {
+	root := &View{Direction: Column}
+	child := &View{Height: 200, Shrink: 1}
+	root.AddChild(child)
+
+	root.UpdateWithSize(100, 100)
+
+	require.Equal(t, image.Rect(0, 0, 100, 100), child.Frame())
+}
+
+func TestResizeShrinkNestedGrow(t *testing.T) {
+	root := &View{Direction: Column}
+	children := make([]*View, 3)
+	for i, grow := range []float64{1, 2, 3} {
+		children[i] = &View{Grow: grow}
+		root.AddChild(children[i])
+	}
+	innerChildren := make([]*View, 3)
+	for i, grow := range []float64{1, 2, 3} {
+		innerChildren[i] = &View{Grow: grow}
+		children[2].AddChild(innerChildren[i])
+	}
+
+	root.UpdateWithSize(800, 600)
+	require.Equal(t, image.Rect(0, 0, 800, 100), children[0].Frame())
+	require.Equal(t, image.Rect(0, 100, 800, 300), children[1].Frame())
+	require.Equal(t, image.Rect(0, 300, 800, 600), children[2].Frame())
+
+	root.UpdateWithSize(1000, 800)
+	require.Equal(t, image.Rect(0, 0, 1000, 133), children[0].Frame())
+	require.Equal(t, image.Rect(0, 133, 1000, 400), children[1].Frame())
+	require.Equal(t, image.Rect(0, 400, 1000, 800), children[2].Frame())
+
+	root.UpdateWithSize(400, 300)
+	require.Equal(t, image.Rect(0, 0, 400, 50), children[0].Frame())
+	require.Equal(t, image.Rect(0, 50, 400, 150), children[1].Frame())
+	require.Equal(t, image.Rect(0, 150, 400, 300), children[2].Frame())
+	require.Equal(t, image.Rect(0, 150, 67, 300), innerChildren[0].Frame())
+	require.Equal(t, image.Rect(67, 150, 200, 300), innerChildren[1].Frame())
+	require.Equal(t, image.Rect(200, 150, 400, 300), innerChildren[2].Frame())
+}
+
+func TestResizeShrinkNestedSameDirection(t *testing.T) {
+	tests := []struct {
+		name      string
+		direction Direction
+	}{
+		{name: "row", direction: Row},
+		{name: "column", direction: Column},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := &View{Direction: tt.direction}
+			child := &View{Direction: tt.direction, Grow: 1}
+			grand := &View{Grow: 1}
+			child.AddChild(grand)
+			root.AddChild(child)
+
+			root.UpdateWithSize(800, 600)
+			require.Equal(t, image.Rect(0, 0, 800, 600), child.Frame())
+			require.Equal(t, image.Rect(0, 0, 800, 600), grand.Frame())
+
+			root.UpdateWithSize(1000, 800)
+			require.Equal(t, image.Rect(0, 0, 1000, 800), child.Frame())
+
+			root.UpdateWithSize(400, 300)
+			require.Equal(t, image.Rect(0, 0, 400, 300), child.Frame())
+			require.Equal(t, image.Rect(0, 0, 400, 300), grand.Frame())
+		})
+	}
+}
+
 func TestMarginsInIntrinsicSize(t *testing.T) {
 	tests := []struct {
 		name      string
