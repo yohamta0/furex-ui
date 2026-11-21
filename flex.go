@@ -447,6 +447,7 @@ func (f *flexEmbed) layout(width, height int, container *containerEmbed) {
 			c.crossSize = float64(
 				f.crossSize(c.node.item.width(), c.node.item.height()),
 			)
+			c.hypotheticalCrossSize = c.crossSize
 		}
 	}
 
@@ -469,10 +470,10 @@ func (f *flexEmbed) layout(width, height int, container *containerEmbed) {
 			line.crossSize = max
 		}
 	}
-
 	off := 0.0
 	for l := range lines {
 		line := &lines[l]
+		line.intrinsicCrossSize = line.crossSize
 		line.crossOffset = off
 		off += line.crossSize
 	}
@@ -493,8 +494,7 @@ func (f *flexEmbed) layout(width, height int, container *containerEmbed) {
 		line := &lines[l]
 		for _, child := range line.child {
 			if f.AlignItems == AlignItemStretch &&
-				!f.isCrossSizeFixed(child.node.item) &&
-				child.crossSize < line.crossSize {
+				!f.isCrossSizeFixed(child.node.item) {
 				crossMargin := child.crossMargin[0] + child.crossMargin[1]
 				child.crossSize = line.crossSize - crossMargin
 			}
@@ -586,45 +586,13 @@ func (f *flexEmbed) layout(width, height int, container *containerEmbed) {
 	}
 
 	// §9.9.1. Flex Container Intrinsic Main Sizes
+	// The max-content main size is the largest sum of outer flex base sizes
+	// of the items in a line.
 	intrinsicMainSize := 0.0
 	for _, line := range lines {
-
-		largestMaxContentFlexFraction := -math.MaxFloat64
-		for _, child := range line.child {
-			// 1. Calculate the max-content flex fraction for each item.
-			flexBaseSize := child.flexBaseSize
-			maxContentSize := child.mainSize
-			var maxContentFlexFraction float64
-			if maxContentSize > flexBaseSize {
-				// Positive free space, divide by flex grow factor (floored at 1).
-				flexGrowFactor := math.Max(1, child.node.item.Grow)
-				maxContentFlexFraction = (maxContentSize - flexBaseSize) / flexGrowFactor
-			} else {
-				// Negative free space, divide by scaled flex shrink factor (floored at 1).
-				flexShrinkFactor := math.Max(1, child.node.item.Shrink)
-				maxContentFlexFraction = (flexBaseSize - maxContentSize) / (flexBaseSize * flexShrinkFactor)
-			}
-			child.maxContentFlexFraction = maxContentFlexFraction
-			if maxContentFlexFraction > largestMaxContentFlexFraction {
-				largestMaxContentFlexFraction = maxContentFlexFraction
-			}
-		}
-
-		// 2. Add each item’s flex base size to the product of its flex grow/shrink factor and the largest max-content flex fraction.
-		for _, child := range line.child {
-			var newMainSize float64
-			if largestMaxContentFlexFraction > 0 {
-				newMainSize = child.flexBaseSize + (child.node.item.Grow * largestMaxContentFlexFraction)
-			} else {
-				newMainSize = child.flexBaseSize - (child.node.item.Shrink * child.flexBaseSize * largestMaxContentFlexFraction)
-			}
-			child.mainSize = newMainSize
-		}
-
-		// 3. Determine line size and update intrinsicMainSize.
 		lineSize := 0.0
 		for _, child := range line.child {
-			lineSize += child.mainSize +
+			lineSize += child.flexBaseSize +
 				(child.mainMargin[0] + child.mainMargin[1])
 		}
 		if lineSize > intrinsicMainSize {
@@ -639,12 +607,14 @@ func (f *flexEmbed) layout(width, height int, container *containerEmbed) {
 	// of its flex items.
 	intrinsicCrossSize := 0.0
 	for _, line := range lines {
-		if intrinsicCrossSize < line.crossOffset+line.crossSize {
-			intrinsicCrossSize = line.crossOffset + line.crossSize
+		// For a single line, crossSize is the container's own cross size,
+		// which must not leak into the intrinsic content size.
+		if len(lines) > 1 {
+			intrinsicCrossSize += line.intrinsicCrossSize
 		}
 		for _, child := range line.child {
 			outerCrossSize := child.crossMargin[0] +
-				child.crossSize +
+				child.hypotheticalCrossSize +
 				child.crossMargin[1]
 			if intrinsicCrossSize < outerCrossSize {
 				intrinsicCrossSize = outerCrossSize
@@ -689,25 +659,26 @@ func (f *flexEmbed) layout(width, height int, container *containerEmbed) {
 }
 
 type element struct {
-	node                   *child
-	flexBaseSize           float64
-	mainSize               float64
-	mainOffset             float64
-	mainMargin             []float64
-	crossSize              float64
-	crossOffset            float64
-	crossMargin            []float64
-	frozen                 bool
-	maxContentFlexFraction float64
-	widthInPct             float64
-	heightInPct            float64
+	node                  *child
+	flexBaseSize          float64
+	mainSize              float64
+	mainOffset            float64
+	mainMargin            []float64
+	crossSize             float64
+	hypotheticalCrossSize float64
+	crossOffset           float64
+	crossMargin           []float64
+	frozen                bool
+	widthInPct            float64
+	heightInPct           float64
 }
 
 type flexLine struct {
-	mainSize    float64
-	crossSize   float64
-	crossOffset float64
-	child       []*element
+	mainSize           float64
+	crossSize          float64
+	intrinsicCrossSize float64
+	crossOffset        float64
+	child              []*element
 }
 
 func (f *flexEmbed) mainSize(x, y int) int {
