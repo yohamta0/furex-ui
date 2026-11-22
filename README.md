@@ -256,12 +256,12 @@ A `ViewRef` handler belongs to one view, so register it with a factory function 
 
 ### Global Components
 
-To register a custom component globally, use the furex.RegisterComponents function. For example:
+To register a custom component globally, use the furex.RegisterComponents function. Use a factory for handlers that keep per-view state; a stateless handler like `Sprite` can be shared. For example:
 
 ```go
   func init() {
   	furex.RegisterComponents(furex.ComponentsMap{
-  		"button":  &widgets.Button{},
+  		"button": func() furex.Handler { return &widgets.Button{} },
   		"sprite": &widgets.Sprite{},
   	})
   }
