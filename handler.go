@@ -1,6 +1,7 @@
 package furex
 
 import (
+	"fmt"
 	"image"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -50,7 +51,7 @@ func (r *ViewRef) BindView(v *View) {
 		return
 	}
 	if r.view != nil && r.view != v {
-		panic("furex: ViewRef is already bound to another view; create one handler instance per view (e.g. with a ComponentsMap factory)")
+		panic(fmt.Sprintf("furex: ViewRef is already bound to another view (tag %q, id %q); create one handler instance per view (e.g. with a ComponentsMap factory)", v.TagName, v.ID))
 	}
 	r.view = v
 }

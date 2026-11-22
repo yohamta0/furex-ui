@@ -102,7 +102,7 @@ func TestViewRefPanicsWhenBoundToDifferentView(t *testing.T) {
 
 	v2 := &View{Width: 10, Height: 10, Handler: h}
 	require.PanicsWithValue(t,
-		"furex: ViewRef is already bound to another view; create one handler instance per view (e.g. with a ComponentsMap factory)",
+		`furex: ViewRef is already bound to another view (tag "", id ""); create one handler instance per view (e.g. with a ComponentsMap factory)`,
 		func() { v2.Update() })
 }
 
@@ -148,9 +148,11 @@ func TestViewRefBindsOnParse(t *testing.T) {
 func TestViewRefSharedInstancePanics(t *testing.T) {
 	h := &viewRefHandler{}
 
-	require.Panics(t, func() {
-		Parse(`<body><box><box></box></box></body>`, &ParseOptions{
-			Components: ComponentsMap{"box": h},
+	require.PanicsWithValue(t,
+		`furex: ViewRef is already bound to another view (tag "box", id "inner"); create one handler instance per view (e.g. with a ComponentsMap factory)`,
+		func() {
+			Parse(`<body><box><box id="inner"></box></box></body>`, &ParseOptions{
+				Components: ComponentsMap{"box": h},
+			})
 		})
-	})
 }
