@@ -84,7 +84,8 @@ func TestViewRefStaysBoundAcrossTicks(t *testing.T) {
 
 func TestViewRefRebindsAfterHandlerReplacement(t *testing.T) {
 	h1 := &viewRefHandler{}
-	h2 := &viewRefHandler{}
+	// Without Update, h2 relies on the per-tick binding alone.
+	h2 := &eventOnlyViewRefHandler{}
 	root := &View{Width: 100, Height: 100, Handler: h1}
 	root.Update()
 
@@ -118,26 +119,38 @@ func TestViewRefBindNilClearsBinding(t *testing.T) {
 	require.Equal(t, v2, h.View())
 }
 
-func TestViewRefBindsParsedViews(t *testing.T) {
+func TestViewRefBindsOnAddChild(t *testing.T) {
 	h := &viewRefHandler{}
-	root := Parse(`<body><box id="box"></box></body>`, &ParseOptions{
+	child := &View{Width: 10, Height: 10, Handler: h}
+	root := &View{Width: 100, Height: 100}
+
+	root.AddChild(child)
+
+	require.Equal(t, child, h.View())
+}
+
+func TestViewRefBindsOnParse(t *testing.T) {
+	rootHandler := &viewRefHandler{}
+	boxHandler := &viewRefHandler{}
+	root := Parse(`<body><div><box id="box"></box></div></body>`, &ParseOptions{
 		Width:      100,
 		Height:     100,
-		Components: ComponentsMap{"box": h},
+		Handler:    rootHandler,
+		Components: ComponentsMap{"box": boxHandler},
 	})
-
-	root.Update()
 
 	box, ok := root.GetByID("box")
 	require.True(t, ok)
-	require.Equal(t, box, h.View())
+	require.Equal(t, root, rootHandler.View())
+	require.Equal(t, box, boxHandler.View())
 }
 
 func TestViewRefSharedInstancePanics(t *testing.T) {
 	h := &viewRefHandler{}
-	root := Parse(`<body><box><box></box></box></body>`, &ParseOptions{
-		Components: ComponentsMap{"box": h},
-	})
 
-	require.Panics(t, func() { root.Update() })
+	require.Panics(t, func() {
+		Parse(`<body><box><box></box></box></body>`, &ParseOptions{
+			Components: ComponentsMap{"box": h},
+		})
+	})
 }

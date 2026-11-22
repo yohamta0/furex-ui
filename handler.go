@@ -23,8 +23,9 @@ type Updater interface {
 
 // ViewBinder is implemented by handlers that need their own View in event
 // callbacks. Embed ViewRef to implement it.
-// The library calls BindView every tick, before the handler's Update and
-// before dispatching any events.
+// The library calls BindView when the view is added to a parent, which
+// includes every view created by Parse, and every tick before the handler's
+// Update and before dispatching any events.
 type ViewBinder interface {
 	BindView(v *View)
 }
@@ -32,8 +33,10 @@ type ViewBinder interface {
 // ViewRef stores the View its handler is attached to.
 // Embed it in a handler to implement ViewBinder.
 //
-// View returns nil until the first Update. BindView(nil) clears the binding,
-// which is only needed when a handler is explicitly moved to another view.
+// View returns nil until the handler is bound: when its view is added to a
+// parent or on the next Update, whichever comes first. BindView(nil) clears
+// the binding, which is only needed when a handler is explicitly moved to
+// another view.
 // A handler that embeds ViewRef must not be copied after it has been bound.
 type ViewRef struct {
 	view *View

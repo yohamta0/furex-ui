@@ -116,6 +116,7 @@ Loop:
 	view.isDirty = true
 	if opts.Handler != nil {
 		view.Handler = opts.Handler
+		view.bindHandler()
 	}
 	return view
 }
