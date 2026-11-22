@@ -32,7 +32,8 @@ type ViewBinder interface {
 }
 
 // ViewRef stores the View its handler is attached to.
-// Embed it in a handler to implement ViewBinder.
+// Embed it in a handler to implement ViewBinder, and set that handler as a
+// pointer: a value does not implement ViewBinder, so View would stay nil.
 //
 // View returns nil until the handler is bound: when its view is added to a
 // parent or on the next Update, whichever comes first. BindView(nil) clears

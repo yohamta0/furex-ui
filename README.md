@@ -23,6 +23,7 @@ Full source code of the example is [here](examples/game/main.go).
   - [CSS Properties](#css-properties)
   - [HTML Attributes](#html-attributes)
   - [Component Types](#component-types)
+  - [Accessing the View from a Handler](#accessing-the-view-from-a-handler)
   - [Global Components](#global-components)
 - [Debugging](#debugging)
 - [Contributions](#contributions)
@@ -234,6 +235,24 @@ There are three types of components you can create in Furex:
 - **Handler Instance**: A `furex.Handler` instance, such as `Drawer` or `Updater`.
 - **Factory Function**: A function that returns a `furex.Handler` instance. This is useful when you want to create separate handler instances for each HTML tag.
 - **Function Component**: A function that returns a `*furex.View` instance. This is an alternative way to create components that encapsulate their own behavior and styles.
+
+### Accessing the View from a Handler
+
+Event callbacks such as `HandleWheel` don't receive the view. To use it there, embed `furex.ViewRef` in a pointer handler:
+
+```go
+type Area struct {
+	furex.ViewRef
+}
+
+func (a *Area) HandleWheel(x, y int, dx, dy float64) bool {
+	frame := a.View().Frame()
+	// ...
+	return true
+}
+```
+
+A `ViewRef` handler belongs to one view, so register it with a factory function such as `"area": func() furex.Handler { return &Area{} }`. Sharing one instance across views panics.
 
 ### Global Components
 
