@@ -145,6 +145,23 @@ func TestViewRefBindsOnParse(t *testing.T) {
 	require.Equal(t, box, boxHandler.View())
 }
 
+func TestViewRefBindsInParsedFunctionComponent(t *testing.T) {
+	h := &viewRefHandler{}
+	// The inner Parse binds h to the view it returns, so that view must be
+	// the one placed in the outer tree.
+	root := Parse(`<body><panel id="panel"></panel></body>`, &ParseOptions{
+		Components: ComponentsMap{
+			"panel": func() *View {
+				return Parse(`<body><div></div></body>`, &ParseOptions{Handler: h})
+			},
+		},
+	})
+
+	panel, ok := root.GetByID("panel")
+	require.True(t, ok)
+	require.Equal(t, panel, h.View())
+}
+
 func TestViewRefSharedInstancePanics(t *testing.T) {
 	h := &viewRefHandler{}
 

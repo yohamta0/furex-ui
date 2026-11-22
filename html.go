@@ -206,30 +206,26 @@ func processRootView(view *View, opts *ParseOptions) {
 }
 
 func createView(name string, cms cms) *View {
-	view := &View{}
 	for _, cm := range cms {
-		if ok := component(name, cm, view); ok {
+		if view, ok := component(name, cm); ok {
 			return view
 		}
 	}
 	panic(fmt.Sprintf("unknown component: %s", name))
 }
 
-func component(name string, m ComponentsMap, v *View) bool {
+func component(name string, m ComponentsMap) (*View, bool) {
 	c, ok := m[name]
 	if c == nil {
-		return ok
+		return &View{}, ok
 	}
 	if c, ok := c.(func() Handler); ok {
-		v.Handler = c()
-		return true
+		return &View{Handler: c()}, true
 	}
 	if c, ok := c.(func() *View); ok {
-		*v = *c()
-		return true
+		return c(), true
 	}
-	v.Handler = c
-	return true
+	return &View{Handler: c}, true
 }
 
 func parseStyle(view *View, style string) {
