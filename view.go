@@ -71,6 +71,9 @@ func (v *View) Update() {
 }
 
 func (v *View) processHandler() {
+	if b, ok := v.Handler.(ViewBinder); ok {
+		b.BindView(v)
+	}
 	if u, ok := v.Handler.(UpdateHandler); ok {
 		u.HandleUpdate()
 		return

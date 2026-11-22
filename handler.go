@@ -21,6 +21,42 @@ type Updater interface {
 	Update(v *View)
 }
 
+// ViewBinder is implemented by handlers that need their own View in event
+// callbacks. Embed ViewRef to implement it.
+// The library calls BindView every tick, before the handler's Update and
+// before dispatching any events.
+type ViewBinder interface {
+	BindView(v *View)
+}
+
+// ViewRef stores the View its handler is attached to.
+// Embed it in a handler to implement ViewBinder.
+//
+// View returns nil until the first Update. BindView(nil) clears the binding,
+// which is only needed when a handler is explicitly moved to another view.
+// A handler that embeds ViewRef must not be copied after it has been bound.
+type ViewRef struct {
+	view *View
+}
+
+// BindView binds the handler to v. It panics if the handler is already bound
+// to a different view. Passing nil clears the binding.
+func (r *ViewRef) BindView(v *View) {
+	if v == nil {
+		r.view = nil
+		return
+	}
+	if r.view != nil && r.view != v {
+		panic("furex: ViewRef is already bound to another view; create one handler instance per view (e.g. with a ComponentsMap factory)")
+	}
+	r.view = v
+}
+
+// View returns the View the handler is attached to.
+func (r *ViewRef) View() *View {
+	return r.view
+}
+
 // DrawHandler represents a component that can be added to a container.
 // Deprectead: use Drawer instead
 type DrawHandler interface {
