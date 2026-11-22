@@ -254,6 +254,8 @@ func (a *Area) HandleWheel(x, y int, dx, dy float64) bool {
 
 A `ViewRef` handler belongs to one view, so register it with a factory function such as `"area": func() furex.Handler { return &Area{} }`. Sharing one instance across views panics.
 
+See [examples/scroll](examples/scroll/main.go) for scrollable lists whose wheel and click handlers use `ViewRef`.
+
 ### Global Components
 
 To register a custom component globally, use the furex.RegisterComponents function. Use a factory for handlers that keep per-view state; a stateless handler like `Sprite` can be shared. For example:
