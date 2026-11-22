@@ -16,8 +16,6 @@ import (
 // This allows flexibility in usage:
 // If you want to reuse the same handler instance for multiple HTML tags, pass the instance;
 // otherwise, pass the factory function to create separate handler instances for each tag.
-// A function component must return a new view on each call; Parse panics if
-// the returned view already has a parent.
 type Component interface{}
 
 // ComponentsMap is a type alias for a dictionary that associates
@@ -225,9 +223,12 @@ func component(name string, m ComponentsMap) (*View, bool) {
 		return &View{Handler: c()}, true
 	}
 	if c, ok := c.(func() *View); ok {
-		v := c()
-		if v.hasParent {
-			panic(fmt.Sprintf("furex: function component %q returned a view that already has a parent; return a new view on each call", name))
+		src := c()
+		v := &View{}
+		*v = *src
+		// A ViewRef handler bound to src, e.g. by an inner Parse, follows the copy.
+		if r, ok := v.Handler.(viewRebinder); ok {
+			r.rebindView(src, v)
 		}
 		return v, true
 	}

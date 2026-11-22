@@ -165,8 +165,8 @@ func TestViewRefBindsOnParse(t *testing.T) {
 
 func TestViewRefBindsInParsedFunctionComponent(t *testing.T) {
 	h := &viewRefHandler{}
-	// The inner Parse binds h to the view it returns, so that view must be
-	// the one placed in the outer tree.
+	// The inner Parse binds h to the view it returns, so the binding must
+	// follow the view placed in the outer tree.
 	root := Parse(`<body><panel id="panel"></panel></body>`, &ParseOptions{
 		Components: ComponentsMap{
 			"panel": func() *View {
@@ -178,6 +178,18 @@ func TestViewRefBindsInParsedFunctionComponent(t *testing.T) {
 	panel, ok := root.GetByID("panel")
 	require.True(t, ok)
 	require.Equal(t, panel, h.View())
+}
+
+func TestViewRefSharedInFunctionComponentPanics(t *testing.T) {
+	icon := &View{Width: 10, Height: 10, Handler: &viewRefHandler{}}
+
+	require.PanicsWithValue(t,
+		`furex: ViewRef is already bound to another view (tag "icon", id "b"); create one handler instance per view (e.g. with a ComponentsMap factory)`,
+		func() {
+			Parse(`<body><div><icon id="a"></icon><icon id="b"></icon></div></body>`, &ParseOptions{
+				Components: ComponentsMap{"icon": func() *View { return icon }},
+			})
+		})
 }
 
 func TestViewRefSharedInstancePanics(t *testing.T) {

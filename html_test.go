@@ -656,16 +656,23 @@ func TestParseMargin(t *testing.T) {
 	}
 }
 
-func TestParseFunctionComponentReturningSharedViewPanics(t *testing.T) {
-	shared := &View{Width: 10, Height: 10}
+func TestParseFunctionComponentReturningSameView(t *testing.T) {
+	icon := &View{Width: 10, Height: 10}
+	opts := &ParseOptions{
+		Components: ComponentsMap{"icon": func() *View { return icon }},
+	}
+	html := `<body><div><icon id="a" style="width: 20px"></icon><icon id="b"></icon></div></body>`
 
-	require.PanicsWithValue(t,
-		`furex: function component "icon" returned a view that already has a parent; return a new view on each call`,
-		func() {
-			Parse(`<body><div><icon></icon><icon></icon></div></body>`, &ParseOptions{
-				Components: ComponentsMap{"icon": func() *View { return shared }},
-			})
-		})
+	// Parse twice: rebuilding a UI reuses the view returned earlier.
+	Parse(html, opts)
+	root := Parse(html, opts)
+
+	a := root.MustGetByID("a")
+	b := root.MustGetByID("b")
+	require.NotSame(t, a, b)
+	require.Equal(t, 20, a.Width)
+	// Attributes of one tag must not leak into the next through the shared view.
+	require.Equal(t, 10, b.Width)
 }
 
 func testViewStyle(t *testing.T, v *View, expected *View) {

@@ -58,6 +58,17 @@ func (r *ViewRef) BindView(v *View) {
 	r.view = v
 }
 
+// viewRebinder moves a binding from a view to its copy.
+type viewRebinder interface {
+	rebindView(from, to *View)
+}
+
+func (r *ViewRef) rebindView(from, to *View) {
+	if r.view == from {
+		r.view = to
+	}
+}
+
 // View returns the View the handler is attached to.
 func (r *ViewRef) View() *View {
 	return r.view
