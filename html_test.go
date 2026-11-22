@@ -656,6 +656,25 @@ func TestParseMargin(t *testing.T) {
 	}
 }
 
+func TestParseFunctionComponentReturningSameView(t *testing.T) {
+	icon := &View{Width: 10, Height: 10}
+	opts := &ParseOptions{
+		Components: ComponentsMap{"icon": func() *View { return icon }},
+	}
+	html := `<body><div><icon id="a" style="width: 20px"></icon><icon id="b"></icon></div></body>`
+
+	// Parse twice: rebuilding a UI reuses the view returned earlier.
+	Parse(html, opts)
+	root := Parse(html, opts)
+
+	a := root.MustGetByID("a")
+	b := root.MustGetByID("b")
+	require.NotSame(t, a, b)
+	require.Equal(t, 20, a.Width)
+	// Attributes of one tag must not leak into the next through the shared view.
+	require.Equal(t, 10, b.Width)
+}
+
 func testViewStyle(t *testing.T, v *View, expected *View) {
 	t.Helper()
 	require.Equal(t, styleConfig(expected.Config()), styleConfig(v.Config()))

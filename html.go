@@ -116,6 +116,7 @@ Loop:
 	view.isDirty = true
 	if opts.Handler != nil {
 		view.Handler = opts.Handler
+		view.bindHandler()
 	}
 	return view
 }
@@ -205,30 +206,33 @@ func processRootView(view *View, opts *ParseOptions) {
 }
 
 func createView(name string, cms cms) *View {
-	view := &View{}
 	for _, cm := range cms {
-		if ok := component(name, cm, view); ok {
+		if view, ok := component(name, cm); ok {
 			return view
 		}
 	}
 	panic(fmt.Sprintf("unknown component: %s", name))
 }
 
-func component(name string, m ComponentsMap, v *View) bool {
+func component(name string, m ComponentsMap) (*View, bool) {
 	c, ok := m[name]
 	if c == nil {
-		return ok
+		return &View{}, ok
 	}
 	if c, ok := c.(func() Handler); ok {
-		v.Handler = c()
-		return true
+		return &View{Handler: c()}, true
 	}
 	if c, ok := c.(func() *View); ok {
-		*v = *c()
-		return true
+		src := c()
+		v := &View{}
+		*v = *src
+		// A ViewRef handler bound to src, e.g. by an inner Parse, follows the copy.
+		if r, ok := v.Handler.(viewRebinder); ok {
+			r.rebindView(src, v)
+		}
+		return v, true
 	}
-	v.Handler = c
-	return true
+	return &View{Handler: c}, true
 }
 
 func parseStyle(view *View, style string) {

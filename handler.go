@@ -1,6 +1,7 @@
 package furex
 
 import (
+	"fmt"
 	"image"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -19,6 +20,58 @@ type Drawer interface {
 type Updater interface {
 	// Update updates the state of the component by one tick.
 	Update(v *View)
+}
+
+// ViewBinder is implemented by handlers that need their own View in event
+// callbacks. Embed ViewRef to implement it.
+// The library calls BindView when the view is added to a parent, which
+// includes every view created by Parse, and every tick before the handler's
+// Update and before dispatching any events.
+type ViewBinder interface {
+	BindView(v *View)
+}
+
+// ViewRef stores the View its handler is attached to.
+// Embed it in a handler to implement ViewBinder, and set that handler as a
+// pointer: a value does not implement ViewBinder, so View would stay nil.
+//
+// View returns nil until the handler is bound: when its view is added to a
+// parent or on the next Update, whichever comes first. A handler assigned
+// from an event callback is bound on the next Update. BindView(nil) clears
+// the binding, which is only needed when a handler is explicitly moved to
+// another view.
+// A handler that embeds ViewRef must not be copied after it has been bound.
+type ViewRef struct {
+	view *View
+}
+
+// BindView binds the handler to v. It panics if the handler is already bound
+// to a different view. Passing nil clears the binding.
+func (r *ViewRef) BindView(v *View) {
+	if v == nil {
+		r.view = nil
+		return
+	}
+	if r.view != nil && r.view != v {
+		panic(fmt.Sprintf("furex: ViewRef is already bound to another view (tag %q, id %q); create one handler instance per view (e.g. with a ComponentsMap factory)", v.TagName, v.ID))
+	}
+	r.view = v
+}
+
+// viewRebinder moves a binding from a view to its copy.
+type viewRebinder interface {
+	rebindView(from, to *View)
+}
+
+func (r *ViewRef) rebindView(from, to *View) {
+	if r.view == from {
+		r.view = to
+	}
+}
+
+// View returns the View the handler is attached to.
+func (r *ViewRef) View() *View {
+	return r.view
 }
 
 // DrawHandler represents a component that can be added to a container.

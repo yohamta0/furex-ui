@@ -23,6 +23,7 @@ Full source code of the example is [here](examples/game/main.go).
   - [CSS Properties](#css-properties)
   - [HTML Attributes](#html-attributes)
   - [Component Types](#component-types)
+  - [Accessing the View from a Handler](#accessing-the-view-from-a-handler)
   - [Global Components](#global-components)
 - [Debugging](#debugging)
 - [Contributions](#contributions)
@@ -235,14 +236,32 @@ There are three types of components you can create in Furex:
 - **Factory Function**: A function that returns a `furex.Handler` instance. This is useful when you want to create separate handler instances for each HTML tag.
 - **Function Component**: A function that returns a `*furex.View` instance. This is an alternative way to create components that encapsulate their own behavior and styles.
 
+### Accessing the View from a Handler
+
+Event callbacks such as `HandleWheel` don't receive the view. To use it there, embed `furex.ViewRef` in a pointer handler:
+
+```go
+type Area struct {
+	furex.ViewRef
+}
+
+func (a *Area) HandleWheel(x, y int, dx, dy float64) bool {
+	frame := a.View().Frame()
+	// ...
+	return true
+}
+```
+
+A `ViewRef` handler belongs to one view, so register it with a factory function such as `"area": func() furex.Handler { return &Area{} }`. Sharing one instance across views panics.
+
 ### Global Components
 
-To register a custom component globally, use the furex.RegisterComponents function. For example:
+To register a custom component globally, use the furex.RegisterComponents function. Use a factory for handlers that keep per-view state; a stateless handler like `Sprite` can be shared. For example:
 
 ```go
   func init() {
   	furex.RegisterComponents(furex.ComponentsMap{
-  		"button":  &widgets.Button{},
+  		"button": func() furex.Handler { return &widgets.Button{} },
   		"sprite": &widgets.Sprite{},
   	})
   }

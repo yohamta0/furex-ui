@@ -66,11 +66,15 @@ func (v *View) Update() {
 		v.item.processHandler()
 	}
 	if !v.hasParent {
+		// A handler may have been assigned by another handler's Update after
+		// its own view was processed.
+		v.bindHandlers()
 		v.processEvent()
 	}
 }
 
 func (v *View) processHandler() {
+	v.bindHandler()
 	if u, ok := v.Handler.(UpdateHandler); ok {
 		u.HandleUpdate()
 		return
@@ -78,6 +82,19 @@ func (v *View) processHandler() {
 	if u, ok := v.Handler.(Updater); ok {
 		u.Update(v)
 		return
+	}
+}
+
+func (v *View) bindHandler() {
+	if b, ok := v.Handler.(ViewBinder); ok {
+		b.BindView(v)
+	}
+}
+
+func (v *View) bindHandlers() {
+	v.bindHandler()
+	for _, c := range v.children {
+		c.item.bindHandlers()
 	}
 }
 
@@ -194,6 +211,8 @@ func (v *View) PopChild() *View {
 }
 
 func (v *View) addChild(cv *View) *View {
+	// Bind before changing the tree so a rebind panic leaves it untouched.
+	cv.bindHandler()
 	child := &child{item: cv, handledTouchID: -1}
 	v.children = append(v.children, child)
 	v.isDirty = true
