@@ -66,6 +66,9 @@ func (v *View) Update() {
 		v.item.processHandler()
 	}
 	if !v.hasParent {
+		// A handler may have been assigned by another handler's Update after
+		// its own view was processed.
+		v.bindHandlers()
 		v.processEvent()
 	}
 }
@@ -85,6 +88,13 @@ func (v *View) processHandler() {
 func (v *View) bindHandler() {
 	if b, ok := v.Handler.(ViewBinder); ok {
 		b.BindView(v)
+	}
+}
+
+func (v *View) bindHandlers() {
+	v.bindHandler()
+	for _, c := range v.children {
+		c.item.bindHandlers()
 	}
 }
 

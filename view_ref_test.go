@@ -71,6 +71,24 @@ func TestViewRefBindsBeforeEvents(t *testing.T) {
 	require.Equal(t, child, h.enterView)
 }
 
+func TestViewRefBindsHandlerAssignedDuringUpdate(t *testing.T) {
+	setPrimaryPointerSource(t, &plainPointerSource{x: 5, y: 5})
+	h := &eventOnlyViewRefHandler{}
+	child := &View{Width: 10, Height: 10}
+	// Children update before their parent, so child has already been
+	// processed when the parent's Update assigns h.
+	parent := &View{Width: 50, Height: 50, Handler: NewHandler(HandlerOpts{
+		Update: func(*View) { child.Handler = h },
+	})}
+	parent.AddChild(child)
+	root := &View{Width: 100, Height: 100}
+	root.AddChild(parent)
+
+	root.Update()
+
+	require.Equal(t, child, h.enterView)
+}
+
 func TestViewRefStaysBoundAcrossTicks(t *testing.T) {
 	h := &viewRefHandler{}
 	root := &View{Width: 100, Height: 100, Handler: h}

@@ -36,7 +36,8 @@ type ViewBinder interface {
 // pointer: a value does not implement ViewBinder, so View would stay nil.
 //
 // View returns nil until the handler is bound: when its view is added to a
-// parent or on the next Update, whichever comes first. BindView(nil) clears
+// parent or on the next Update, whichever comes first. A handler assigned
+// from an event callback is bound on the next Update. BindView(nil) clears
 // the binding, which is only needed when a handler is explicitly moved to
 // another view.
 // A handler that embeds ViewRef must not be copied after it has been bound.
