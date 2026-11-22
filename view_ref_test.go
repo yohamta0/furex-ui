@@ -11,14 +11,11 @@ type viewRefHandler struct {
 
 	updated    bool
 	updateView *View
-	eventView  *View
-	enters     int
 }
 
 var (
-	_ ViewBinder               = (*viewRefHandler)(nil)
-	_ Updater                  = (*viewRefHandler)(nil)
-	_ PointerEnterLeaveHandler = (*viewRefHandler)(nil)
+	_ ViewBinder = (*viewRefHandler)(nil)
+	_ Updater    = (*viewRefHandler)(nil)
 )
 
 func (h *viewRefHandler) Update(v *View) {
@@ -26,13 +23,20 @@ func (h *viewRefHandler) Update(v *View) {
 	h.updateView = h.View()
 }
 
-func (h *viewRefHandler) HandlePointerEnter(x, y int) bool {
-	h.enters++
-	h.eventView = h.View()
+// eventOnlyViewRefHandler has no Update, so only the binding done by furex
+// gives it access to its view.
+type eventOnlyViewRefHandler struct {
+	ViewRef
+
+	enterView *View
+}
+
+func (h *eventOnlyViewRefHandler) HandlePointerEnter(x, y int) bool {
+	h.enterView = h.View()
 	return true
 }
 
-func (h *viewRefHandler) HandlePointerLeave() {}
+func (h *eventOnlyViewRefHandler) HandlePointerLeave() {}
 
 func TestViewRefIsNilBeforeFirstUpdate(t *testing.T) {
 	h := &viewRefHandler{}
@@ -56,16 +60,26 @@ func TestViewRefBindsBeforeHandlerUpdate(t *testing.T) {
 }
 
 func TestViewRefBindsBeforeEvents(t *testing.T) {
-	h := &viewRefHandler{}
+	setPrimaryPointerSource(t, &plainPointerSource{x: 5, y: 5})
+	h := &eventOnlyViewRefHandler{}
 	child := &View{Width: 10, Height: 10, Handler: h}
 	root := &View{Width: 100, Height: 100}
 	root.AddChild(child)
 
 	root.Update()
-	root.handlePointerEnterLeave(5, 5)
 
-	require.Equal(t, 1, h.enters)
-	require.Equal(t, child, h.eventView)
+	require.Equal(t, child, h.enterView)
+}
+
+func TestViewRefStaysBoundAcrossTicks(t *testing.T) {
+	h := &viewRefHandler{}
+	root := &View{Width: 100, Height: 100, Handler: h}
+
+	require.NotPanics(t, func() {
+		root.Update()
+		root.Update()
+	})
+	require.Equal(t, root, h.View())
 }
 
 func TestViewRefRebindsAfterHandlerReplacement(t *testing.T) {
