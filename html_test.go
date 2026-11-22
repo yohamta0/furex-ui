@@ -656,6 +656,18 @@ func TestParseMargin(t *testing.T) {
 	}
 }
 
+func TestParseFunctionComponentReturningSharedViewPanics(t *testing.T) {
+	shared := &View{Width: 10, Height: 10}
+
+	require.PanicsWithValue(t,
+		`furex: function component "icon" returned a view that already has a parent; return a new view on each call`,
+		func() {
+			Parse(`<body><div><icon></icon><icon></icon></div></body>`, &ParseOptions{
+				Components: ComponentsMap{"icon": func() *View { return shared }},
+			})
+		})
+}
+
 func testViewStyle(t *testing.T, v *View, expected *View) {
 	t.Helper()
 	require.Equal(t, styleConfig(expected.Config()), styleConfig(v.Config()))
